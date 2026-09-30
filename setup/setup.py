@@ -154,6 +154,12 @@ def create_sales_channel(api, ctx):
         {"action": "upsert", "entity": "shipping_method", "payload": [{"id": ctx["shipping"], "name": "Lieferung"}]},
     ])
 
+    # shop e-mail: sender of all mails and recipient of the contact form (Settings > Basic information)
+    api.request("POST", "/api/_action/system-config/batch", {"null": {
+        "core.basicInformation.email": "info@example.com",
+        "core.basicInformation.shopName": "ShopBite Demo",
+    }})
+
     # open every day around the clock, so ordering works whenever you try it (Sunday is day 7)
     hours = [{"id": hid(f"business-hour:{day}"), "salesChannelId": SALES_CHANNEL_ID, "dayOfWeek": day,
               "openingTime": "00:00", "closingTime": "23:59"} for day in range(1, 8)]

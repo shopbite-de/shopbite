@@ -35,6 +35,7 @@ Follow the first start with `docker compose logs -f setup`. When it prints `stor
 ## Things to try
 
 - **Order something.** Pick a pizza, add extras, check out as a guest. The order appears in the Admin under *Bestellungen*.
+- **Send a message.** The contact form on http://localhost:3000/kontakt delivers to the shop address, which Mailpit catches as well.
 - **Change the menu.** Edit a price or a dish in the Admin (*Kataloge > Produkte*). The storefront shows the change after a minute or two.
 - **Set your opening hours.** *ShopBite > Öffnungszeiten* in the Admin menu (the demo is open around the clock). Add a holiday under *Feiertage* and the storefront shows the shop as closed.
 - **Start with an empty menu.** `SEED_DEMO_MENU=0 docker compose up -d` on a fresh install creates the sales channel without the demo dishes.
