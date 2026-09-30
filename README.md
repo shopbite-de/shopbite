@@ -39,6 +39,19 @@ Follow the first start with `docker compose logs -f setup`. When it prints `stor
 - **Set your opening hours.** *ShopBite > Öffnungszeiten* in the Admin menu (the demo is open around the clock). Add a holiday under *Feiertage* and the storefront shows the shop as closed.
 - **Start with an empty menu.** `SEED_DEMO_MENU=0 docker compose up -d` on a fresh install creates the sales channel without the demo dishes.
 
+## Make it your shop
+
+The folder [`storefront/`](storefront/) is your storefront: start page texts, legal pages, colours and logo live there as plain files.
+
+```bash
+cd storefront
+pnpm install
+pnpm dev                                   # http://localhost:3001, changes show up live
+docker compose up -d --build storefront    # later: put your version on :3000
+```
+
+The setup service writes `storefront/.env` with the access key, so `pnpm dev` talks to the Shopware of this stack without any configuration. Details in [storefront/README.md](storefront/README.md).
+
 ## What's inside
 
 ```
@@ -48,7 +61,7 @@ docker compose up
  │   ├─ worker     message queue (mails, indexing, thumbnails)
  │   └─ scheduler  scheduled tasks
  ├─ setup       sales channel, opening hours and demo menu (setup/menu.json)
- ├─ storefront  ShopBite Nuxt storefront                   :3000
+ ├─ storefront  your storefront from ./storefront           :3000
  ├─ database    MariaDB 11.8
  ├─ valkey      cache, carts, sessions
  └─ mailpit     catches all outgoing mails                 :8025
@@ -74,13 +87,13 @@ docker compose down -v         # stop and delete all data, next start is a fresh
 
 ## Configuration
 
-Everything works without configuration. To change the admin password, the shop name or other values, copy `.env.example` to `.env` and edit it before the first start.
+Everything works without configuration. To change the admin password or other values, copy `.env.example` to `.env` and edit it before the first start.
 
 Ports 3000, 8000 and 8025 must be free. They are fixed on purpose: the storefront shares the network of the Shopware container, so `http://localhost:8000` points to Shopware for your browser and for the server-side rendering alike.
 
 ### Build the images yourself
 
-The images are built from the repositories above by [a GitHub workflow](.github/workflows/images.yaml). To build them locally instead (10 to 20 minutes):
+The images are built by [a GitHub workflow](.github/workflows/images.yaml): Shopware from [shopbite-de/shopware](https://github.com/shopbite-de/shopware), the storefront from the `storefront/` folder. To build the Shopware image locally as well (10 to 20 minutes):
 
 ```bash
 docker compose -f compose.yaml -f compose.build.yaml up -d --build

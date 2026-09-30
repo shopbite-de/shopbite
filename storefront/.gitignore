@@ -1,0 +1,7 @@
+node_modules
+.nuxt
+.output
+.data
+.env
+# not committed: the published image always uses the newest @shopbite-de/storefront 1.x
+pnpm-lock.yaml

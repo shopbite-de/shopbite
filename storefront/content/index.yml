@@ -1,0 +1,109 @@
+# Start page of your shop. Change the texts, save, and the page updates
+# (pnpm dev) or rebuild the container: docker compose up -d --build storefront
+#
+# Icons: any name from https://icones.js.org/collection/lucide, e.g. i-lucide-pizza
+# Colours of buttons: primary, neutral; variants: solid, outline, subtle, soft, ghost, link
+
+seo:
+  title: "ShopBite Demo: Pizza, Pasta und mehr online bestellen"
+  description: Bestellen Sie Pizza, Pasta, Salate und Desserts online zur Lieferung oder Abholung.
+title: ShopBite Demo
+description: Ihre Lieblingsgerichte online bestellen, zur Lieferung oder Abholung.
+
+hero:
+  title: Frisch gekocht, schnell geliefert.
+  headline: WILLKOMMEN
+  # Optional background video (mp4 URL), the poster is shown while it loads and on slow connections
+  # backgroundVideo: https://example.com/hero.mp4
+  poster: /hero-poster.webp
+  usps:
+    - title: Frisch
+      subtitle: Jeden Tag zubereitet
+      icon: i-lucide-chef-hat
+    - title: Lieferservice
+      subtitle: Schnell und zuverlässig
+      icon: i-lucide-bike
+    - title: Abholung
+      subtitle: Ohne Wartezeit
+      icon: i-lucide-shopping-bag
+  links:
+    - label: Speisekarte
+      icon: i-lucide-arrow-right
+      trailing: true
+      color: primary
+      to: /Speisekarte/
+      size: xl
+    - label: Anrufen
+      icon: i-lucide-phone
+      size: xl
+      color: neutral
+      variant: outline
+      to: "tel:+49123456789"
+      target: _self
+
+menu:
+  headline: SPEISEKARTE
+  title: Was darf es heute sein?
+  description: Pizza, Pasta, Fleisch und Fisch, frisch aus der Küche.
+
+highlights:
+  headline: BELIEBT
+  title: Beliebt bei unseren Gästen
+  description: Die Gerichte, die am häufigsten bestellt werden.
+
+features:
+  headline: GUT ZU WISSEN
+  title: Alle [Informationen]{.text-primary} auf einen Blick
+  description: Holen Sie Ihre Bestellung ab oder lassen Sie sie liefern.
+  features:
+    # kind: hours and kind: delivery fill the first line with live data from Shopware
+    - title: Öffnungszeiten
+      kind: hours
+      description: Die Öffnungszeiten pflegen Sie in der Shopware Administration unter ShopBite.
+      icon: i-lucide-clock
+      link:
+        label: Alle Öffnungszeiten
+        to: "#oeffnungszeiten"
+    - title: Lieferung
+      kind: delivery
+      description: Wir liefern in Musterstadt und Umgebung. Ab 15 € frei Haus.
+      icon: i-lucide-truck
+    - title: Fragen?
+      kind: reservation
+      lead: Rufen Sie uns an
+      description: Wir helfen Ihnen gerne bei Ihrer Bestellung.
+      icon: i-lucide-phone
+      link:
+        label: 0123 456789 anrufen
+        to: "tel:+49123456789"
+
+# Optional sections, uncomment to use them:
+#
+# mittagstisch:
+#   headline: MITTAGS
+#   title: Mittagstisch
+#   description: Montag bis Freitag, 11:30 bis 14:30 Uhr
+#   image: /mittagstisch.webp
+#   imageAlt: Mittagstisch
+#   features:
+#     - title: Täglich wechselndes Angebot
+#       description: Drei Gerichte zur Auswahl
+#       icon: i-lucide-utensils-crossed
+#   links: []
+#
+# gallery:
+#   headline: RESTAURANT
+#   title: Besuchen Sie uns
+#   description: Unser Restaurant in Musterstadt.
+#   images:
+#     - image: /restaurant-1.webp
+#       alt: Gastraum
+#   links: []
+
+cta:
+  title: Jetzt bestellen!
+  description: Frisch zubereitet und direkt zu Ihnen geliefert oder zum Abholen bereit.
+  links:
+    - label: Zur Speisekarte
+      to: /Speisekarte/
+      color: primary

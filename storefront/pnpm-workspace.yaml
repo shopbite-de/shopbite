@@ -1,0 +1,6 @@
+# pnpm build script approvals (pnpm 10)
+onlyBuiltDependencies:
+  - esbuild
+  - vue-demi
+ignoredBuiltDependencies:
+  - "@shopbite-de/storefront"

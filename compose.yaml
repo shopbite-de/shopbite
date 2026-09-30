@@ -140,13 +140,18 @@ services:
     volumes:
       - ./setup:/setup:ro
       - storefront-config:/config
+      - ./storefront:/storefront
     command: ["python", "-u", "/setup/setup.py"]
     depends_on:
       shopware:
         condition: service_healthy
 
+  # Your storefront: texts in storefront/content, colours, logo. `docker compose up -d` pulls the
+  # prebuilt image of this folder, `docker compose up -d --build` builds your changes.
   storefront:
     image: ${STOREFRONT_IMAGE:-ghcr.io/shopbite-de/shopbite-storefront:latest}
+    build: ./storefront
+    pull_policy: missing
     restart: unless-stopped
     # Shares the network of the shopware container: http://localhost:8000 then points to
     # Shopware in the browser and during server-side rendering alike.
@@ -155,7 +160,6 @@ services:
       NUXT_PUBLIC_SHOPWARE_ENDPOINT: http://localhost:8000/store-api
       NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL: http://localhost:3000
       NUXT_PUBLIC_STORE_URL: http://localhost:3000
-      NUXT_PUBLIC_SITE_NAME: ${SHOP_NAME:-ShopBite Demo}
       NUXT_SITE_INDEXABLE: "false"
       # short caches so changes in the Administration show up within a minute
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_PRODUCT: 60

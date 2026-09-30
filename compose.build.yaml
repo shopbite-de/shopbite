@@ -1,8 +1,9 @@
-# Builds both images from source instead of pulling them (takes 10 to 20 minutes):
+# Builds the Shopware image from source instead of pulling it (takes 10 to 20 minutes).
+# The storefront is built from ./storefront with `--build` anyway.
 #
 #   docker compose -f compose.yaml -f compose.build.yaml up -d --build
 #
-# Set SHOPWARE_REF / STOREFRONT_REF to build a branch or tag, e.g. STOREFRONT_REF=v1.29.0.
+# Set SHOPWARE_REF to build a branch or tag of shopbite-de/shopware.
 services:
   init:
     build: &shopware-build
@@ -15,7 +16,3 @@ services:
     build: *shopware-build
   scheduler:
     build: *shopware-build
-  storefront:
-    build:
-      context: https://github.com/shopbite-de/storefront.git#${STOREFRONT_REF:-main}
-      dockerfile: node.dockerfile

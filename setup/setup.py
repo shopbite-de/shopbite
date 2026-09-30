@@ -8,7 +8,7 @@ Runs as the `setup` service of compose.yaml after Shopware is up:
 2. seeds the demo menu from menu.json (categories, products, variants, extras,
    images from images/<number>.webp), unless SEED_DEMO_MENU=0
 3. writes /config/storefront.env (access key, country, menu category) for the
-   storefront container
+   storefront container, and storefront/.env for `pnpm dev` on port 3001
 
 Everything is created only once: on later starts the script finds the sales
 channel and the menu and only writes the storefront config, so changes made in
@@ -34,6 +34,9 @@ STOREFRONT_URL = os.environ.get("STOREFRONT_URL", "http://localhost:3000").rstri
 SEED_DEMO_MENU = os.environ.get("SEED_DEMO_MENU", "1") not in ("0", "false", "no", "")
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.environ.get("STOREFRONT_CONFIG", "/config/storefront.env")
+# .env for `pnpm dev` in the storefront folder of this repository (mounted at /storefront)
+DEV_ENV_FILE = os.environ.get("STOREFRONT_DEV_ENV", "/storefront/.env")
+DEV_URL = os.environ.get("STOREFRONT_DEV_URL", "http://localhost:3001").rstrip("/")
 
 # storefront type, not headless: Shopware only generates SEO URLs (used by the storefront) for this type
 STOREFRONT_TYPE_ID = "8a243080f92e4c719546314b577cf82b"
@@ -140,8 +143,8 @@ def create_sales_channel(api, ctx):
         "shippingMethods": [{"id": ctx["shipping"]}],
         "countries": [{"id": ctx["country"]}],
         # registration and password recovery links point to the storefront
-        "domains": [{"id": hid("domain"), "url": STOREFRONT_URL, "languageId": ctx["language"],
-                     "currencyId": ctx["currency"], "snippetSetId": ctx["snippet_set"]}],
+        "domains": [{"id": hid("domain:" + url), "url": url, "languageId": ctx["language"],
+                     "currencyId": ctx["currency"], "snippetSetId": ctx["snippet_set"]} for url in (STOREFRONT_URL, DEV_URL)],
     }]}])
 
     # names that fit a delivery shop (the defaults are "Nachnahme" and "Standard")
@@ -345,6 +348,15 @@ def main():
     os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
     with open(CONFIG_FILE, "w") as f:
         f.write("".join(f"{k}={v}\n" for k, v in config.items()))
+    if os.path.isdir(os.path.dirname(DEV_ENV_FILE)):
+        dev = {**config,
+               "NUXT_PUBLIC_SHOPWARE_ENDPOINT": "http://localhost:8000/store-api",
+               "NUXT_PUBLIC_STORE_URL": DEV_URL,
+               "NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL": DEV_URL}
+        with open(DEV_ENV_FILE, "w") as f:
+            f.write("# written by the setup service of compose.yaml, used by `pnpm dev`\n")
+            f.write("".join(f"{k}={v}\n" for k, v in dev.items()))
+        os.chmod(DEV_ENV_FILE, 0o666)
     print(f"storefront config written, open {STOREFRONT_URL}")
 
 
