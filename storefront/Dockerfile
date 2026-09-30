@@ -1,4 +1,4 @@
-# Builds your storefront, used by compose.custom.yaml
+# Builds your storefront: docker compose up -d --build storefront, and the published image (CI)
 FROM node:24-alpine AS build
 
 ENV NODE_ENV=production
@@ -7,7 +7,9 @@ WORKDIR /app
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml .npmrc ./
-RUN pnpm install
+# CI pins the exact storefront release it tests (.github/workflows/images.yaml); locally the newest 1.x
+ARG STOREFRONT_VERSION=
+RUN if [ -n "$STOREFRONT_VERSION" ]; then pnpm add "@shopbite-de/storefront@$STOREFRONT_VERSION"; else pnpm install; fi
 
 COPY . .
 RUN pnpm build
