@@ -1,0 +1,117 @@
+name: Build quickstart images
+
+# Builds the two images compose.yaml pulls, for amd64 and arm64 (Apple Silicon):
+#   ghcr.io/shopbite-de/shopbite-shopware    shopbite-de/shopware (main) with local file storage
+#   ghcr.io/shopbite-de/shopbite-storefront  latest release of shopbite-de/storefront
+# The weekly run picks up new releases and the security rebuilds of the base images.
+
+on:
+  push:
+    branches: [main]
+    paths: [shopware/**, .github/workflows/images.yaml]
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: images
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [shopware, storefront]
+        platform: [linux/amd64, linux/arm64]
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check out shopbite-de/shopware
+        if: matrix.image == 'shopware'
+        uses: actions/checkout@v5
+        with:
+          repository: shopbite-de/shopware
+          path: shopware-src
+
+      - name: Check out the latest storefront release
+        if: matrix.image == 'storefront'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo shopbite-de/storefront --json tagName --jq .tagName)
+          echo "Storefront $tag"
+          git clone --depth 1 --branch "$tag" https://github.com/shopbite-de/storefront.git storefront-src
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image == 'shopware' && 'shopware' || 'storefront-src' }}
+          file: ${{ matrix.image == 'shopware' && 'shopware/Dockerfile' || 'storefront-src/node.dockerfile' }}
+          build-contexts: ${{ matrix.image == 'shopware' && 'shopware=shopware-src' || '' }}
+          platforms: ${{ matrix.platform }}
+          pull: true
+          # links the package to this repository (and its visibility settings)
+          labels: |
+            org.opencontainers.image.source=https://github.com/shopbite-de/shopbite
+            org.opencontainers.image.description=ShopBite quickstart image (${{ matrix.image }})
+          outputs: type=image,name=ghcr.io/shopbite-de/shopbite-${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.image }}-${{ runner.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ runner.arch }}
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.image }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        image: [shopware, storefront]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-${{ matrix.image }}-*
+          merge-multiple: true
+          path: /tmp/digests
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create the multi-platform tags
+        working-directory: /tmp/digests
+        run: |
+          image=ghcr.io/shopbite-de/shopbite-${{ matrix.image }}
+          docker buildx imagetools create \
+            -t "$image:latest" -t "$image:$(date -u +%Y%m%d)" \
+            $(printf "$image@sha256:%s " *)
+          docker buildx imagetools inspect "$image:latest"

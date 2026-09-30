@@ -1,0 +1,4 @@
+# Replaces config/packages/prod/filesystem.yaml of shopbite-de/shopware (S3 storage).
+# Without a filesystem section Shopware keeps all files on the local disk:
+# public/media, public/thumbnail, public/theme, public/sitemap and files/ (private).
+# compose.yaml mounts a volume on each of these paths.

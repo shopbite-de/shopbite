@@ -1,0 +1,1190 @@
+{
+ "categories": [
+  {
+   "key": "vorspeisen",
+   "name": "Vorspeisen",
+   "icon": "i-lucide-soup"
+  },
+  {
+   "key": "salate",
+   "name": "Salate",
+   "icon": "i-lucide-salad"
+  },
+  {
+   "key": "pizza",
+   "name": "Pizza",
+   "icon": "i-lucide-pizza"
+  },
+  {
+   "key": "nudeln",
+   "name": "Nudeln",
+   "icon": "i-lucide-wheat"
+  },
+  {
+   "key": "fleisch",
+   "name": "Fleischgerichte",
+   "icon": "i-lucide-beef"
+  },
+  {
+   "key": "fisch",
+   "name": "Fisch",
+   "icon": "i-lucide-fish"
+  },
+  {
+   "key": "extras",
+   "name": "Extras & Beilagen",
+   "icon": "i-lucide-circle-plus"
+  },
+  {
+   "key": "nachtisch",
+   "name": "Nachtisch",
+   "icon": "i-lucide-ice-cream-cone"
+  },
+  {
+   "key": "getraenke",
+   "name": "Getränke",
+   "icon": "i-lucide-cup-soda"
+  }
+ ],
+ "products": [
+  {
+   "number": "1",
+   "name": "Scampi Cocktail",
+   "description": "Krabbencocktail mit Toastbrot",
+   "price": 10.5,
+   "category": "vorspeisen",
+   "tax": 7,
+   "ingredients": [
+    "Krabben",
+    "Cocktailsoße",
+    "Toastbrot"
+   ]
+  },
+  {
+   "number": "3",
+   "name": "Mozzarella Caprese",
+   "description": "Tomaten und Mozzarella mit Basilikum und Olivenöl",
+   "price": 9.5,
+   "category": "vorspeisen",
+   "tax": 7,
+   "ingredients": [
+    "Tomaten",
+    "Mozzarella",
+    "Basilikum"
+   ],
+   "vegetarian": true
+  },
+  {
+   "number": "4",
+   "name": "Gebackener Camembertkäse",
+   "description": "Gebackener Camembert mit Preiselbeeren und Toastbrot",
+   "price": 6.5,
+   "category": "vorspeisen",
+   "tax": 7,
+   "ingredients": [
+    "Camembert",
+    "Preiselbeeren",
+    "Toastbrot"
+   ],
+   "vegetarian": true
+  },
+  {
+   "number": "6",
+   "name": "Insalata di Mari",
+   "description": "Meeresfrüchtesalat mit Olivenöl und Zitrone",
+   "price": 14.5,
+   "category": "vorspeisen",
+   "tax": 7,
+   "ingredients": [
+    "Meeresfrüchte",
+    "Olivenöl",
+    "Zitrone"
+   ]
+  },
+  {
+   "number": "12",
+   "name": "Insalata verde",
+   "description": "Eisbergsalat, Zwiebeln",
+   "price": 5.0,
+   "category": "salate",
+   "tax": 7,
+   "ingredients": [
+    "Eisbergsalat",
+    "Zwiebeln"
+   ],
+   "vegan": true
+  },
+  {
+   "number": "14",
+   "name": "Insalata di Pomodoro con Tonno",
+   "description": "Tomaten, Tunfisch, Zwiebeln",
+   "price": 7.5,
+   "category": "salate",
+   "tax": 7,
+   "ingredients": [
+    "Tomaten",
+    "Thunfisch",
+    "Zwiebeln"
+   ]
+  },
+  {
+   "number": "16",
+   "name": "Insalata della casa",
+   "description": "Ei, Eisbergsalat, Käse, Meeresfrüchte, Mozzarella, Schinken",
+   "price": 9.5,
+   "category": "salate",
+   "tax": 7,
+   "ingredients": [
+    "Ei",
+    "Eisbergsalat",
+    "Käse",
+    "Meeresfrüchte",
+    "Mozzarella",
+    "Schinken"
+   ]
+  },
+  {
+   "number": "18",
+   "name": "Insalata di Pollo",
+   "description": "Eisbergsalat, Gurken, Hähnchenbrustfilet, Käse, Mais, Tomaten, Zwiebeln",
+   "price": 11.0,
+   "category": "salate",
+   "tax": 7,
+   "ingredients": [
+    "Eisbergsalat",
+    "Gurken",
+    "Hähnchenbrustfilet",
+    "Käse",
+    "Mais",
+    "Tomaten",
+    "Zwiebeln"
+   ]
+  },
+  {
+   "number": "20",
+   "name": "Beilagensalat",
+   "description": "Eisbergsalat, Gurken, Tomaten, Zwiebeln",
+   "price": 4.0,
+   "category": "salate",
+   "tax": 7,
+   "ingredients": [
+    "Eisbergsalat",
+    "Gurken",
+    "Tomaten",
+    "Zwiebeln"
+   ],
+   "vegan": true
+  },
+  {
+   "number": "21",
+   "name": "Pizza Margherita",
+   "description": "Mit Tomatensoße und Käse",
+   "price": 7.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse"
+   ],
+   "vegetarian": true,
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "22",
+   "name": "Pizza Salami",
+   "description": "Mit Tomatensoße und Käse, Salami",
+   "price": 8.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Salami"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "23",
+   "name": "Pizza Prosciutto",
+   "description": "Mit Tomatensoße und Käse, Schinken",
+   "price": 8.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Schinken"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "24",
+   "name": "Pizza Funghi",
+   "description": "Mit Tomatensoße und Käse, Pilze",
+   "price": 8.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Pilze"
+   ],
+   "vegetarian": true,
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "26",
+   "name": "Pizza Mix",
+   "description": "Mit Tomatensoße und Käse, Pilze, Salami, Schinken",
+   "price": 8.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Pilze",
+    "Salami",
+    "Schinken"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "27",
+   "name": "Pizza Romana",
+   "description": "Mit Tomatensoße und Käse, Salami, Shrimps, Zucchini, Zwiebeln",
+   "price": 9.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Salami",
+    "Shrimps",
+    "Zucchini",
+    "Zwiebeln"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "29",
+   "name": "Pizza Quattro Stagioni",
+   "description": "Mit Tomatensoße und Käse, Artischocken, Salami, Schinken, Zwiebeln",
+   "price": 8.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Artischocken",
+    "Salami",
+    "Schinken",
+    "Zwiebeln"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "30",
+   "name": "Pizza Calzone",
+   "description": "Mit Tomatensoße und Käse, Champignons, Paprika, Salami, Schinken",
+   "price": 9.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Champignons",
+    "Paprika",
+    "Salami",
+    "Schinken"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "31",
+   "name": "Pizza Tonno",
+   "description": "Mit Tomatensoße und Käse, Knoblauch, Thunfisch, Zwiebeln",
+   "price": 9.0,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Knoblauch",
+    "Thunfisch",
+    "Zwiebeln"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "32",
+   "name": "Pizza Hawaii",
+   "description": "Mit Tomatensoße und Käse, Ananas, Schinken",
+   "price": 8.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Ananas",
+    "Schinken"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "35",
+   "name": "Pizza Diavolo",
+   "description": "Mit Tomatensoße und Käse, Knoblauch, Peperoni (scharf), Peperoniwurst",
+   "price": 8.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Knoblauch",
+    "Peperoni (scharf)",
+    "Peperoniwurst"
+   ],
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "38",
+   "name": "Pizza Vegetaria",
+   "description": "Mit Tomatensoße und Käse, Brokkoli, Pilze, Zucchini, Zwiebeln",
+   "price": 9.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Brokkoli",
+    "Pilze",
+    "Zucchini",
+    "Zwiebeln"
+   ],
+   "vegetarian": true,
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "46",
+   "name": "Pizza Quattro Formaggi",
+   "description": "Mit Tomatensoße und Käse, Gorgonzola, Mozzarella, Parmesan",
+   "price": 9.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße",
+    "Käse",
+    "Gorgonzola",
+    "Mozzarella",
+    "Parmesan"
+   ],
+   "vegetarian": true,
+   "crossSelling": "extras",
+   "variants": {
+    "Größe": [
+     {
+      "name": "Normal 30 cm",
+      "surcharge": 0
+     },
+     {
+      "name": "Groß 40 cm",
+      "surcharge": 3.0
+     }
+    ]
+   }
+  },
+  {
+   "number": "48",
+   "name": "Pizzabrot Knoblauch",
+   "description": "Pizzabrot mit Knoblauch und Olivenöl",
+   "price": 3.5,
+   "category": "pizza",
+   "tax": 7,
+   "ingredients": [
+    "Knoblauch",
+    "Olivenöl"
+   ],
+   "vegan": true,
+   "crossSelling": "extras"
+  },
+  {
+   "number": "50",
+   "name": "Spaghetti Napoli",
+   "description": "Spaghetti in Tomatensoße",
+   "price": 8.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Tomatensoße"
+   ],
+   "vegan": true
+  },
+  {
+   "number": "51",
+   "name": "Spaghetti Bolognese",
+   "description": "Spaghetti in Hackfleischsoße",
+   "price": 9.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Hackfleischsoße"
+   ]
+  },
+  {
+   "number": "52",
+   "name": "Spaghetti Carbonara",
+   "description": "Spaghetti mit Vorderschinken und Ei in Sahnesoße",
+   "price": 9.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Vorderschinken",
+    "Ei",
+    "Sahnesoße"
+   ]
+  },
+  {
+   "number": "54",
+   "name": "Spaghetti Aglio e Olio",
+   "description": "Spaghetti mit Knoblauch, Olivenöl und scharfen Peperoni",
+   "price": 8.5,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Knoblauch",
+    "Olivenöl",
+    "Peperoni (scharf)"
+   ],
+   "vegan": true
+  },
+  {
+   "number": "56",
+   "name": "Spaghetti Frutti di Mare",
+   "description": "Spaghetti mit Meeresfrüchten und Knoblauch in Tomatensoße",
+   "price": 11.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Meeresfrüchte",
+    "Knoblauch",
+    "Tomatensoße"
+   ]
+  },
+  {
+   "number": "58",
+   "name": "Spaghetti Gorgonzola",
+   "description": "Spaghetti in Gorgonzolasoße",
+   "price": 9.5,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Gorgonzolasoße"
+   ],
+   "vegetarian": true
+  },
+  {
+   "number": "63",
+   "name": "Rigatoni Quattro Formaggi",
+   "description": "Rigatoni mit vier Sorten Käse in Sahnesoße",
+   "price": 10.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Käse",
+    "Sahnesoße"
+   ],
+   "vegetarian": true
+  },
+  {
+   "number": "70",
+   "name": "Tagliatelle Bolognese",
+   "description": "Bandnudeln in Bolognesesoße",
+   "price": 9.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Hackfleischsoße"
+   ]
+  },
+  {
+   "number": "80",
+   "name": "Penne all'Arrabbiata",
+   "description": "Penne mit Oliven, scharfen Peperoni und Knoblauch in Tomatensoße",
+   "price": 9.5,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Oliven",
+    "Peperoni (scharf)",
+    "Knoblauch",
+    "Tomatensoße"
+   ],
+   "vegan": true
+  },
+  {
+   "number": "93",
+   "name": "Gnocchi Bolognese",
+   "description": "Gnocchi in Hackfleischsoße",
+   "price": 9.0,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Hackfleischsoße"
+   ]
+  },
+  {
+   "number": "95",
+   "name": "Lasagne",
+   "description": "Eier-Nudelteigscheiben mit Hackfleisch- und Bechamelsoße, überbacken",
+   "price": 9.5,
+   "category": "nudeln",
+   "tax": 7,
+   "ingredients": [
+    "Hackfleischsoße",
+    "Bechamelsoße",
+    "Käse"
+   ]
+  },
+  {
+   "number": "103",
+   "name": "Schnitzel Wiener Art",
+   "description": "Paniertes Schweineschnitzel nach Wiener Art mit Pommes frites",
+   "price": 12.5,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "105",
+   "name": "Rahmschnitzel",
+   "description": "Paniertes Schnitzel mit Rahmsoße und Pommes frites",
+   "price": 15.0,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "111",
+   "name": "Prager Schnitzel",
+   "description": "Paniertes Schnitzel mit Vorderschinken, Spargel und Rahmsoße, überbacken",
+   "price": 16.5,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "112",
+   "name": "Cordon Bleu",
+   "description": "Paniertes Schnitzel gefüllt mit Schinken und Käse",
+   "price": 16.5,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "115",
+   "name": "Scaloppina al Vino Bianco",
+   "description": "Kalbsschnitzel in Weißweinsoße",
+   "price": 19.0,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "119",
+   "name": "Scaloppina ai Funghi",
+   "description": "Kalbsschnitzel mit frischen Pilzen in Sahnesoße",
+   "price": 19.5,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "123",
+   "name": "Bistecca alla Griglia",
+   "description": "Gegrilltes Rumpsteak",
+   "price": 24.0,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ],
+    "Garstufe": [
+     {
+      "name": "Medium",
+      "surcharge": 0
+     },
+     {
+      "name": "Durchgebraten",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "125",
+   "name": "Bistecca al Gorgonzola",
+   "description": "Rumpsteak in Gorgonzolasoße",
+   "price": 26.0,
+   "category": "fleisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2,
+   "variants": {
+    "Beilage": [
+     {
+      "name": "Pommes frites",
+      "surcharge": 0
+     },
+     {
+      "name": "Bratkartoffeln",
+      "surcharge": 0
+     },
+     {
+      "name": "Kroketten",
+      "surcharge": 0
+     },
+     {
+      "name": "Reis",
+      "surcharge": 0
+     }
+    ],
+    "Garstufe": [
+     {
+      "name": "Medium",
+      "surcharge": 0
+     },
+     {
+      "name": "Durchgebraten",
+      "surcharge": 0
+     }
+    ]
+   }
+  },
+  {
+   "number": "133",
+   "name": "Calamari Fritti",
+   "description": "Frittierte Tintenfischringe mit Knoblauchsoße",
+   "price": 14.0,
+   "category": "fisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2
+  },
+  {
+   "number": "135",
+   "name": "Scampi alla Provinciale",
+   "description": "Garnelen mit Knoblauch in Tomaten-Weißweinsoße",
+   "price": 18.0,
+   "category": "fisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2
+  },
+  {
+   "number": "139",
+   "name": "Salmone alla Griglia",
+   "description": "Gegrilltes Lachsfilet mit Zitrone",
+   "price": 20.5,
+   "category": "fisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2
+  },
+  {
+   "number": "140",
+   "name": "Salmone all'Aglio",
+   "description": "Lachs in Knoblauchsoße mit Salzkartoffeln",
+   "price": 21.0,
+   "category": "fisch",
+   "tax": 7,
+   "deliveryTimeFactor": 2
+  },
+  {
+   "number": "200",
+   "name": "Portion Pommes frites",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegan": true
+  },
+  {
+   "number": "201",
+   "name": "Portion Reis",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegan": true
+  },
+  {
+   "number": "202",
+   "name": "Portion Kroketten",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "203",
+   "name": "Portion Bratkartoffeln",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegan": true
+  },
+  {
+   "number": "204",
+   "name": "Portion Joghurtsoße",
+   "description": "",
+   "price": 2.5,
+   "category": "extras",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "205",
+   "name": "Portion Knoblauchsoße",
+   "description": "",
+   "price": 2.5,
+   "category": "extras",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "206",
+   "name": "Portion Salzkartoffeln",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegan": true
+  },
+  {
+   "number": "207",
+   "name": "Portion Gemüse",
+   "description": "",
+   "price": 4.0,
+   "category": "extras",
+   "tax": 7,
+   "vegan": true
+  },
+  {
+   "number": "141",
+   "name": "Tartufo",
+   "description": "Schokoladeneis mit knuspriger Kakaohülle und flüssigem Schokoladenkern",
+   "price": 5.5,
+   "category": "nachtisch",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "144",
+   "name": "Tiramisu",
+   "description": "Hausgemachtes Tiramisu mit Espresso und Mascarpone",
+   "price": 5.5,
+   "category": "nachtisch",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "145",
+   "name": "Lavakuchen",
+   "description": "Warmer Schokoladenkuchen mit flüssigem Kern und einer Kugel Vanilleeis",
+   "price": 5.5,
+   "category": "nachtisch",
+   "tax": 7,
+   "vegetarian": true
+  },
+  {
+   "number": "300",
+   "name": "Coca-Cola 0,33 l",
+   "description": "",
+   "price": 2.5,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "301",
+   "name": "Coca-Cola Zero 0,33 l",
+   "description": "",
+   "price": 2.5,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "302",
+   "name": "Fanta Orange 0,33 l",
+   "description": "",
+   "price": 2.5,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "303",
+   "name": "Mineralwasser 0,5 l",
+   "description": "",
+   "price": 2.0,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "304",
+   "name": "Apfelschorle 0,5 l",
+   "description": "",
+   "price": 2.5,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "305",
+   "name": "Eistee Pfirsich 0,33 l",
+   "description": "",
+   "price": 2.5,
+   "category": "getraenke",
+   "tax": 19,
+   "vegan": true
+  },
+  {
+   "number": "900",
+   "name": "Extra Käse",
+   "description": "",
+   "price": 1.0,
+   "tax": 7
+  },
+  {
+   "number": "901",
+   "name": "Extra Salami",
+   "description": "",
+   "price": 1.5,
+   "tax": 7
+  },
+  {
+   "number": "902",
+   "name": "Extra Schinken",
+   "description": "",
+   "price": 1.5,
+   "tax": 7
+  },
+  {
+   "number": "903",
+   "name": "Extra Pilze",
+   "description": "",
+   "price": 1.0,
+   "tax": 7
+  },
+  {
+   "number": "904",
+   "name": "Extra Peperoni (scharf)",
+   "description": "",
+   "price": 1.0,
+   "tax": 7
+  },
+  {
+   "number": "905",
+   "name": "Extra Zwiebeln",
+   "description": "",
+   "price": 0.8,
+   "tax": 7
+  },
+  {
+   "number": "906",
+   "name": "Extra Oliven",
+   "description": "",
+   "price": 1.0,
+   "tax": 7
+  },
+  {
+   "number": "907",
+   "name": "Extra Mozzarella",
+   "description": "",
+   "price": 1.5,
+   "tax": 7
+  }
+ ]
+}

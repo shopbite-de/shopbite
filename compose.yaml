@@ -1,0 +1,189 @@
+# ShopBite quickstart: Shopware 6 + ShopBite plugin + demo menu + Nuxt storefront.
+#
+#   docker compose up -d
+#
+#   Storefront      http://localhost:3000
+#   Administration  http://localhost:8000/admin   (admin / shopbite)
+#   Mails           http://localhost:8025
+#
+# The first start installs Shopware and seeds the demo menu (a few minutes).
+# All values below have local defaults; override them in a .env file (see .env.example).
+# This stack is made for trying ShopBite on your machine, not for production.
+
+name: shopbite
+
+x-shopware: &shopware
+  image: ${SHOPWARE_IMAGE:-ghcr.io/shopbite-de/shopbite-shopware:latest}
+  restart: unless-stopped
+  environment: &shopware-env
+    APP_ENV: prod
+    APP_URL: http://localhost:8000
+    APP_SECRET: ${APP_SECRET:-7d0f4a6c2b1e4f0c9a8b3d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a}
+    INSTANCE_ID: ${INSTANCE_ID:-5f4e3d2c1b0a99887766554433221100}
+    DATABASE_URL: mysql://shopware:shopware@database:3306/shopware
+    REDIS_URL: redis://valkey:6379
+    MAILER_DSN: smtp://mailpit:1025
+    ENABLE_SERVICES: 0
+    TRUSTED_PROXIES: private_ranges
+    # short HTTP cache so changes in the Administration show up right away
+    SHOPWARE_HTTP_DEFAULT_TTL: 60
+    MONOLOG_LOG_LEVEL: error
+  volumes:
+    - media:/var/www/html/public/media
+    - thumbnail:/var/www/html/public/thumbnail
+    - theme:/var/www/html/public/theme
+    - sitemap:/var/www/html/public/sitemap
+    - private-files:/var/www/html/files
+
+services:
+  database:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: shopware
+      MARIADB_USER: shopware
+      MARIADB_PASSWORD: shopware
+      MARIADB_ROOT_PASSWORD: shopware
+    command:
+      - --sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+      - --log_bin_trust_function_creators=1
+      - --default-time-zone=+00:00
+      - --group_concat_max_len=320000
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    # volatile-lru only evicts cache keys (with TTL), never carts or number ranges
+    command: ["valkey-server", "--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru", "--appendonly", "yes"]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Installs Shopware on the first start, afterwards runs migrations and plugin updates
+  init:
+    <<: *shopware
+    restart: "no"
+    healthcheck:
+      disable: true
+    environment:
+      <<: *shopware-env
+      INSTALL_LOCALE: de-DE
+      INSTALL_CURRENCY: EUR
+      INSTALL_ADMIN_USERNAME: admin
+      INSTALL_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-shopbite}
+      INSTALL_ADMIN_EMAIL: admin@example.com
+    entrypoint: ["php", "vendor/bin/shopware-deployment-helper", "run", "--skip-assets-install"]
+    depends_on:
+      database:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+
+  shopware:
+    <<: *shopware
+    ports:
+      - "8000:8000"
+      # the storefront shares this container's network (see below), so its port is published here
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/api/_info/health-check"]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  # Message queue (mails, indexing, thumbnails) and scheduled tasks (cache invalidation, cleanup)
+  worker:
+    <<: *shopware
+    healthcheck:
+      disable: true
+    entrypoint: ["php", "bin/console", "messenger:consume", "async", "low_priority", "--time-limit=300", "--memory-limit=512M"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *shopware
+    healthcheck:
+      disable: true
+    entrypoint: ["php", "bin/console", "scheduled-task:run"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  # Creates the ShopBite sales channel, opening hours and the demo menu (setup/menu.json).
+  # Runs on every start and skips everything that already exists.
+  setup:
+    image: python:3.13-alpine
+    restart: "no"
+    environment:
+      SHOPWARE_URL: http://shopware:8000
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-shopbite}
+      STOREFRONT_URL: http://localhost:3000
+      SEED_DEMO_MENU: ${SEED_DEMO_MENU:-1}
+    volumes:
+      - ./setup:/setup:ro
+      - storefront-config:/config
+    command: ["python", "-u", "/setup/setup.py"]
+    depends_on:
+      shopware:
+        condition: service_healthy
+
+  storefront:
+    image: ${STOREFRONT_IMAGE:-ghcr.io/shopbite-de/shopbite-storefront:latest}
+    restart: unless-stopped
+    # Shares the network of the shopware container: http://localhost:8000 then points to
+    # Shopware in the browser and during server-side rendering alike.
+    network_mode: service:shopware
+    environment:
+      NUXT_PUBLIC_SHOPWARE_ENDPOINT: http://localhost:8000/store-api
+      NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL: http://localhost:3000
+      NUXT_PUBLIC_STORE_URL: http://localhost:3000
+      NUXT_PUBLIC_SITE_NAME: ${SHOP_NAME:-ShopBite Demo}
+      NUXT_SITE_INDEXABLE: "false"
+      # short caches so changes in the Administration show up within a minute
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_PRODUCT: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_CROSS_SELLING: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_LISTING: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_VARIANT: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_CATEGORY: 60
+    # access key, country and menu category come from the setup service
+    entrypoint: ["sh", "-c", "set -a && . /config/storefront.env && set +a && exec node .output/server/index.mjs"]
+    volumes:
+      - storefront-config:/config:ro
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  # Catches all mails (order confirmations, registration) at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+
+volumes:
+  db-data:
+  valkey-data:
+  media:
+  thumbnail:
+  theme:
+  sitemap:
+  private-files:
+  storefront-config:
