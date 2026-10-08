@@ -2,7 +2,7 @@ name: Build quickstart images
 
 # Builds the two images compose.yaml pulls, for amd64 and arm64 (Apple Silicon):
 #   ghcr.io/shopbite-de/shopbite-shopware    shopbite-de/shopware (main) with local file storage
-#   ghcr.io/shopbite-de/shopbite-storefront  the storefront/ folder with the newest @shopbite-de/storefront 1.x
+#   ghcr.io/shopbite-de/shopbite-storefront  the storefront/ folder with the newest @shopbite-de/storefront 2.x
 # Both are published as `candidate` first. The smoke test (test/smoke.mjs) runs the whole stack
 # with them and orders a pizza; only then `latest` moves. The storefront image carries the tested
 # storefront release in the label de.shopbite.storefront.version, which the lead demos build from.
@@ -34,7 +34,7 @@ jobs:
       storefront: ${{ steps.version.outputs.storefront }}
     steps:
       - id: version
-        run: echo "storefront=$(npm view @shopbite-de/storefront@^1 version | tail -1 | awk '{print $NF}' | tr -d "'")" >> "$GITHUB_OUTPUT"
+        run: echo "storefront=$(npm view @shopbite-de/storefront@^2 version | tail -1 | awk '{print $NF}' | tr -d "'")" >> "$GITHUB_OUTPUT"
       - run: echo "Storefront ${{ steps.version.outputs.storefront }}"
 
   build:
