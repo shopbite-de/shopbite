@@ -54,8 +54,9 @@ await step("menu section", async () => {
 await step("pizza with an extra into the cart", async () => {
   await page.getByText("Pizza Margherita").first().click();
   await page.getByText("Extra Salami").click();
-  await page.getByText("Hinzufügen", { exact: true }).last().click();
-  await page.goto(`${STOREFRONT}/bestellung/warenkorb`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /In den Warenkorb/ }).click();
+  // storefront 2.x: one-page checkout with the cart next to the form
+  await page.goto(`${STOREFRONT}/bestellung/kasse`, { waitUntil: "networkidle" });
   await page.getByText(/Pizza Margherita \+Extra Salami/).first().waitFor();
 });
 
@@ -63,23 +64,22 @@ await step("guest checkout", async () => {
   for (const [label, value] of [
     ["Vorname", "Max"],
     ["Nachname", "Muster"],
-    ["Email", "smoke@example.com"],
-    ["Straße", "Musterstraße 1"],
+    ["E-Mail", "smoke@example.com"],
+    ["Straße und Hausnummer", "Musterstraße 1"],
     ["PLZ", "12345"],
     ["Ort", "Musterstadt"],
     ["Telefon", "0123456789"],
   ]) {
-    await page.getByLabel(label).first().fill(value);
+    await page.getByLabel(label, { exact: true }).first().fill(value);
   }
-  await page.getByText("Ich habe die").click();
-  await page.getByRole("button", { name: "Speichern" }).click();
-  await page.getByText("Zahlungs- und Versandart auswählen").click();
-  await page.waitForURL(/zahlung-versand/);
-  await page.getByText("Weiter zu Prüfen & Bestellen").first().click();
-  await page.waitForURL(/bestaetigen/);
-  const checkboxes = page.locator('button[role="checkbox"]:visible, input[type="checkbox"]:visible');
-  for (let i = 0; i < (await checkboxes.count()); i++) await checkboxes.nth(i).click();
-  await page.getByRole("button", { name: /Jetzt bestellen/ }).click();
+  await page.getByText("Ich habe die Datenschutzerklärung").click();
+  await page.getByRole("button", { name: "Angaben speichern", exact: true }).click();
+  const order = page.getByRole("button", { name: "Zahlungspflichtig bestellen", exact: true });
+  await order.waitFor();
+  await page.waitForFunction(
+    () => [...document.querySelectorAll("button")].some((b) => b.textContent.trim() === "Zahlungspflichtig bestellen" && !b.disabled),
+  );
+  await order.click();
   await page.waitForURL(/\/erfolg/);
 });
 
@@ -102,7 +102,7 @@ await step("contact form", async () => {
     await page.getByRole("option").first().click();
   }
   await page.getByRole("button", { name: /senden/i }).click();
-  await page.getByText(/erfolgreich versendet/).first().waitFor();
+  await page.getByText(/erfolgreich versendet|Nachricht ist bei uns angekommen/).first().waitFor();
 });
 
 await step("mails in Mailpit", async () => {
