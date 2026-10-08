@@ -6,8 +6,8 @@ This folder is your shop's storefront. It extends the [ShopBite storefront](http
 | --- | --- |
 | Start page texts, buttons, sections | `content/index.yml` |
 | Imprint, privacy policy, terms, payment and delivery | `content/*.md` |
-| Brand colours | `app/assets/css/main.css` |
-| Logo (light and dark mode) | `public/light/Logo.png`, `public/dark/Logo.png` |
+| Style preset and colours | `shopBite` in `nuxt.config.ts` |
+| Logo | `public/light/Logo.png` (light presets), `public/dark/Logo.png` (`grill`) |
 | Shop name, address, phone | `nuxt.config.ts` |
 | Components | a file with the same name in `app/components/` replaces the layer's |
 

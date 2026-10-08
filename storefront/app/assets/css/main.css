@@ -4,22 +4,3 @@
 /* Tailwind skips node_modules: scan the layer's components and your content */
 @source "../../../node_modules/@shopbite-de/storefront/app/**/*.{vue,ts}";
 @source "../../../content/**/*";
-
-/*
- * Brand colours. brand-600 is the primary colour in light mode, brand-400 in dark mode.
- * Keep brand-600 at 5:1 contrast or more on white and brand-400 at 4.5:1 or more on #171717.
- * Example: swap the scale for Tailwind's red, emerald or indigo values.
- */
-@theme {
-  --color-brand-50: #fff4ed;
-  --color-brand-100: #ffe4d1;
-  --color-brand-200: #ffc8a3;
-  --color-brand-300: #ffa169;
-  --color-brand-400: #ff7a2d;
-  --color-brand-500: #ff5b00;
-  --color-brand-600: #c23d00;
-  --color-brand-700: #a83500;
-  --color-brand-800: #9a3200;
-  --color-brand-900: #7a2800;
-  --color-brand-950: #471500;
-}
