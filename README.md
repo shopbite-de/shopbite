@@ -26,6 +26,7 @@ The first start downloads the images and installs Shopware, which takes a few mi
 | --------------------- | ---------------------------- | ------------------- |
 | 🛒 Storefront         | http://localhost:3000        |                     |
 | ⚙️ Shopware Admin     | http://localhost:8000/admin  | `admin` / `shopbite` |
+| 🧑‍🍳 Backoffice        | http://localhost:3010        | `chef` or `theke` / `shopbite` |
 | ✉️ Mails (Mailpit)    | http://localhost:8025        |                     |
 
 That's it. You get a restaurant shop with 71 dishes in 9 menu sections, pizza sizes, extras, side dishes, vegetarian and vegan badges, opening hours and a working checkout. Order a pizza and the confirmation mail shows up in Mailpit.
@@ -38,6 +39,7 @@ Follow the first start with `docker compose logs -f setup`. When it prints `stor
 - **Send a message.** The contact form on http://localhost:3000/kontakt delivers to the shop address, which Mailpit catches as well.
 - **Change the menu.** Edit a price or a dish in the Admin (*Kataloge > Produkte*). The storefront shows the change after a minute or two.
 - **Set your opening hours.** *ShopBite > Öffnungszeiten* in the Admin menu (the demo is open around the clock). Add a holiday under *Feiertage* and the storefront shows the shop as closed.
+- **Work like the restaurant staff.** The [backoffice](https://github.com/shopbite-de/backoffice) on http://localhost:3010 is the simple admin for a restaurant: `chef` (Management) edits dishes, prices, sections, extras and opening hours, `theke` (Personal) sees today's orders, pauses online ordering and sets the delivery time. On a phone or tablet it installs as an app, and *Mein Zugang* sets up login with fingerprint or Face ID.
 - **Start with an empty menu.** `SEED_DEMO_MENU=0 docker compose up -d` on a fresh install creates the sales channel without the demo dishes.
 
 ## Make it your shop
@@ -63,6 +65,7 @@ docker compose up
  │   └─ scheduler  scheduled tasks
  ├─ setup       sales channel, opening hours and demo menu (setup/menu.json)
  ├─ storefront  your storefront from ./storefront           :3000
+ ├─ backoffice  simple admin for the restaurant staff        :3010
  ├─ database    MariaDB 11.8
  ├─ valkey      cache, carts, sessions
  └─ mailpit     catches all outgoing mails                 :8025
@@ -90,7 +93,7 @@ docker compose down -v         # stop and delete all data, next start is a fresh
 
 Everything works without configuration. To change the admin password or other values, copy `.env.example` to `.env` and edit it before the first start.
 
-Ports 3000, 8000 and 8025 must be free. They are fixed on purpose: the storefront shares the network of the Shopware container, so `http://localhost:8000` points to Shopware for your browser and for the server-side rendering alike.
+Ports 3000, 3010, 8000 and 8025 must be free. They are fixed on purpose: the storefront shares the network of the Shopware container, so `http://localhost:8000` points to Shopware for your browser and for the server-side rendering alike.
 
 ### Build the images yourself
 
@@ -107,7 +110,7 @@ This stack is made for trying ShopBite locally. It uses fixed secrets and plain 
 ## Troubleshooting
 
 - **The storefront shows an error right after `up`:** the first installation is still running. Wait for `docker compose logs setup` to finish.
-- **`port is already allocated`:** another program uses port 3000, 8000 or 8025. Stop it and run `docker compose up -d` again.
+- **`port is already allocated`:** another program uses port 3000, 3010, 8000 or 8025. Stop it and run `docker compose up -d` again.
 - **Something is broken after experimenting:** `docker compose down -v && docker compose up -d` starts from scratch.
 
 ## License
