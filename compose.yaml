@@ -4,6 +4,7 @@
 #
 #   Storefront      http://localhost:3000
 #   Administration  http://localhost:8000/admin   (admin / shopbite)
+#   Backoffice      http://localhost:3010         (chef or theke / shopbite)
 #   Mails           http://localhost:8025
 #
 # The first start installs Shopware and seeds the demo menu (a few minutes).
@@ -169,6 +170,27 @@ services:
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_CATEGORY: 60
     # access key, country and menu category come from the setup service
     entrypoint: ["sh", "-c", "set -a && . /config/storefront.env && set +a && exec node .output/server/index.mjs"]
+    volumes:
+      - storefront-config:/config:ro
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  # Backoffice for the restaurant staff, simpler than the Administration (github.com/shopbite-de/backoffice).
+  # Sample accounts from the setup service: chef (Management) and theke (Personal), password shopbite.
+  backoffice:
+    image: ${BACKOFFICE_IMAGE:-ghcr.io/shopbite-de/backoffice:edge}
+    restart: unless-stopped
+    read_only: true
+    ports:
+      - "3010:3000"
+    environment:
+      NUXT_SHOPWARE_URL: http://shopware:8000
+      NUXT_RESTAURANT_NAME: ${RESTAURANT_NAME:-ShopBite Demo}
+      # plain http on localhost; production runs behind https
+      NUXT_SESSION_SECURE: "false"
+    # branch, menu category and session password come from the setup service
+    entrypoint: ["sh", "-c", "set -a && . /config/backoffice.env && set +a && exec bun .output/server/index.mjs"]
     volumes:
       - storefront-config:/config:ro
     depends_on:

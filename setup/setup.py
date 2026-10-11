@@ -9,6 +9,9 @@ Runs as the `setup` service of compose.yaml after Shopware is up:
    images from images/<number>.webp), unless SEED_DEMO_MENU=0
 3. writes /config/storefront.env (access key, country, menu category) for the
    storefront container, and storefront/.env for `pnpm dev` on port 3001
+4. prepares the backoffice: two sample accounts (chef = Management, theke =
+   Personal of the ShopBite branch), passkeys for http://localhost:3010, and
+   /config/backoffice.env (branch, menu category, session password)
 
 Everything is created only once: on later starts the script finds the sales
 channel and the menu and only writes the storefront config, so changes made in
@@ -37,6 +40,17 @@ CONFIG_FILE = os.environ.get("STOREFRONT_CONFIG", "/config/storefront.env")
 # .env for `pnpm dev` in the storefront folder of this repository (mounted at /storefront)
 DEV_ENV_FILE = os.environ.get("STOREFRONT_DEV_ENV", "/storefront/.env")
 DEV_URL = os.environ.get("STOREFRONT_DEV_URL", "http://localhost:3001").rstrip("/")
+BACKOFFICE_CONFIG_FILE = os.environ.get("BACKOFFICE_CONFIG", "/config/backoffice.env")
+BACKOFFICE_URL = os.environ.get("BACKOFFICE_URL", "http://localhost:3010").rstrip("/")
+# fixed ids of the ACL roles the ShopBite plugin installs (StaffRoleInstaller)
+MANAGEMENT_ROLE_ID = "269557440406425e9dc87470cd0e9ffb"
+PERSONAL_ROLE_ID = "493f47fa65684ad8829c852f523fe45c"
+STAFF_PASSWORD = "shopbite"
+STAFF = [
+    # username, first name, role, branches (None = all, Management)
+    ("chef", "Chef", MANAGEMENT_ROLE_ID, None),
+    ("theke", "Theke", PERSONAL_ROLE_ID, "own"),
+]
 
 # storefront type, not headless: Shopware only generates SEO URLs (used by the storefront) for this type
 STOREFRONT_TYPE_ID = "8a243080f92e4c719546314b577cf82b"
@@ -324,6 +338,7 @@ def context(api):
                                                   "associations": {"folder": {}}})
     return {
         "language": api.first("language", "locale.code", "de-DE"),
+        "locale": api.first("locale", "code", "de-DE"),
         "currency": api.first("currency", "isoCode", "EUR"),
         "snippet_set": api.first("snippet-set", "iso", "de-DE"),
         "country": api.first("country", "iso", "DE"),
@@ -333,6 +348,72 @@ def context(api):
         "tax": taxes,
         "media_folder": folders[0]["folder"]["id"],
     }
+
+
+def staff_token():
+    """Users can only be created with a token that has the user-verified scope (fresh password login)."""
+    return Api().request("POST", "/api/oauth/token", {
+        "grant_type": "password",
+        "client_id": "administration",
+        "scope": "write user-verified",
+        "username": ADMIN_USER,
+        "password": ADMIN_PASSWORD,
+    })["access_token"]
+
+
+def setup_backoffice(api, ctx):
+    """Sample accounts, plugin settings for the backoffice and its config file; skips what exists."""
+    config = api.request("GET", "/api/_action/system-config?domain=ShopBitePlugin.config")
+    values = {}
+    # passkeys work on localhost without https (WebAuthn treats it as a secure context)
+    if not config.get("ShopBitePlugin.config.passkeyRpId"):
+        values["ShopBitePlugin.config.passkeyRpId"] = "localhost"
+        values["ShopBitePlugin.config.passkeyOrigins"] = BACKOFFICE_URL
+    if values:
+        api.request("POST", "/api/_action/system-config", values)
+    channel_config = api.request(
+        "GET", f"/api/_action/system-config?domain=ShopBitePlugin.config&salesChannelId={SALES_CHANNEL_ID}")
+    if not channel_config.get("ShopBitePlugin.config.menuCategoryId"):
+        api.request("POST", f"/api/_action/system-config?salesChannelId={SALES_CHANNEL_ID}",
+                    {"ShopBitePlugin.config.menuCategoryId": MENU_ID})
+
+    roles = {r["id"] for r in api.search("acl-role", {"ids": [MANAGEMENT_ROLE_ID, PERSONAL_ROLE_ID]})}
+    if len(roles) < 2:
+        print("backoffice: the ShopBite plugin has no staff roles yet (older version), no sample accounts")
+    else:
+        existing = {u["username"] for u in api.search("user", {
+            "filter": [{"type": "equalsAny", "field": "username", "value": [s[0] for s in STAFF]}]})}
+        missing = [s for s in STAFF if s[0] not in existing]
+        if missing:
+            staff = Api()
+            staff.token = staff_token()
+            # the sync endpoint refuses users ("crud" scope), the entity route takes them
+            for username, first_name, role, branches in missing:
+                staff.request("POST", "/api/user", {
+                    "id": hid("user:" + username),
+                    "username": username,
+                    "password": STAFF_PASSWORD,
+                    "firstName": first_name,
+                    "lastName": "Demo",
+                    "email": f"{username}@staff.shopbite.invalid",
+                    "localeId": ctx["locale"],
+                    "aclRoles": [{"id": role}],
+                    "customFields": {"shopbite_sales_channel_ids": [SALES_CHANNEL_ID] if branches else None},
+                })
+            print("backoffice: sample accounts " + ", ".join(s[0] for s in missing) + f" (password {STAFF_PASSWORD})")
+
+    # the session password survives restarts, otherwise everyone would be logged out
+    current = {}
+    if os.path.exists(BACKOFFICE_CONFIG_FILE):
+        with open(BACKOFFICE_CONFIG_FILE) as f:
+            current = dict(line.strip().split("=", 1) for line in f if "=" in line)
+    backoffice = {
+        "NUXT_SALES_CHANNELS": f"{SALES_CHANNEL_ID}:{MENU_ID}",
+        "NUXT_SESSION_PASSWORD": current.get("NUXT_SESSION_PASSWORD") or secrets.token_hex(32),
+    }
+    with open(BACKOFFICE_CONFIG_FILE, "w") as f:
+        f.write("".join(f"{k}={v}\n" for k, v in backoffice.items()))
+    print(f"backoffice config written, open {BACKOFFICE_URL}")
 
 
 def main():
@@ -364,6 +445,7 @@ def main():
             f.write("".join(f"{k}={v}\n" for k, v in dev.items()))
         os.chmod(DEV_ENV_FILE, 0o666)
     print(f"storefront config written, open {STOREFRONT_URL}")
+    setup_backoffice(api, ctx)
 
 
 if __name__ == "__main__":
