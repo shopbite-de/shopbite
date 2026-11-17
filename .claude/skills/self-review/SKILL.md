@@ -38,6 +38,7 @@ Code: worktree <absolute path>, branch <branch>, base <base>. Work read-only: no
    - Spec: every acceptance criterion met, with proof you produced, not a claim from a commit message. Anything the task did not ask for.
    - Correctness: bugs, edge cases, behaviour changes for users or operators; use the code-review skill on the diff if it is available.
    - Repo rules: each rule in the CLAUDE.md files that the diff touches (e.g. a registry or list a new piece must be added to, docs that must change with the code).
+   - Tests: when the repo works test-first, run the new or changed tests against the base code (export the base with `git archive <base> | tar -x -C /tmp/<dir>`, copy the branch's test files in, install and run them there). A test that passes there does not cover the change.
    - Public hygiene: code, comments, docs and commit messages in English; no names, paths or links the parent CLAUDE.md marks as private; no secrets or real customer data.
    - Follow-ups: documented behaviour that changed and needs a docs task elsewhere.
 5. Report: verdict `ready` or `changes needed`; findings ranked most severe first, each with severity (blocker, should-fix, nit), evidence and a suggested fix; the checks you ran with results; what you could not verify and why.
