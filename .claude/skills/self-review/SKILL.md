@@ -16,7 +16,8 @@ The implementer knows what it meant and reads that into the diff; so does the se
    Withhold the implementer's report, its test results and your own opinion of the change: a reviewer handed a conclusion tends to confirm it.
 2. **Spawn** a fresh `general-purpose` agent (never `fork`, which inherits this conversation) with the brief below, filled in. Done when it returns a verdict.
 3. **Act** on the verdict:
-   - `changes needed`: send the findings to the implementer (its agent, or a new one in the same worktree) to fix, then run a new self-review with a new reviewer. Two rounds at most; after that, bring the remaining findings to the user.
+   - `changes needed`: send the findings to the implementer (its agent, or a new one in the same worktree) to fix. Then **verify** with a new reviewer whose scope is the fix commit only: the findings it claims to fix (stated as requirements, not as the old reviewer's text) and new blockers or regressions; lesser points come back as nits. A full review per round never converges, because every fresh reviewer finds new nits. Two fix rounds at most; after that, bring the remaining findings to the user, or, if the user asked for a finished PR, open it with them listed under known limitations.
+   - Ranking: fix blockers and should-fix findings; batch nits, and fix them only when cheap.
    - `ready`: report to the user with the reviewer's checks alongside the implementer's report.
    
    A finding you think is wrong goes to the user with your reason; do not drop it silently.
@@ -36,7 +37,7 @@ Code: worktree <absolute path>, branch <branch>, base <base>. Work read-only: no
 3. Run the repo's own checks as its CLAUDE.md names them (lint, typecheck, tests, build). Record each command and its result.
 4. Check, and give evidence (file:line, command output) for each finding:
    - Spec: every acceptance criterion met, with proof you produced, not a claim from a commit message. Anything the task did not ask for.
-   - Correctness: bugs, edge cases, behaviour changes for users or operators; use the code-review skill on the diff if it is available.
+   - Correctness: bugs, edge cases, behaviour changes for users or operators; use the code-review skill on the diff if it is available, run from inside the worktree (its default target is the current directory's diff, so from elsewhere it reviews the wrong tree).
    - Repo rules: each rule in the CLAUDE.md files that the diff touches (e.g. a registry or list a new piece must be added to, docs that must change with the code).
    - Tests: when the repo works test-first, run the new or changed tests against the base code (export the base with `git archive <base> | tar -x -C /tmp/<dir>`, copy the branch's test files in, install and run them there). A test that passes there does not cover the change.
    - Public hygiene: code, comments, docs and commit messages in English; no names, paths or links the parent CLAUDE.md marks as private; no secrets or real customer data.
