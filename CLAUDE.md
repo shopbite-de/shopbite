@@ -4,6 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Quickstart repository: `docker compose up -d` runs the whole ShopBite stack locally (Shopware + plugin, demo menu, storefront, Mailpit). It is the entry point linked from `/docs/intro` on shopbite.de, so keep it working with zero configuration.
 
+## Development hub
+
+Sessions for any ShopBite work start here. The other `shopbite-de` repos are cloned next to this one (see the README table); work in them is delegated to an agent in that repo with the `delegate` skill (Herdr), and verified end to end with this stack.
+
 ## Pieces
 
 - `compose.yaml`: database, valkey, `init` (Shopware Deployment Helper), `shopware` (:8000, also publishes :3000), `worker`, `scheduler`, `setup`, `storefront`, `mailpit` (:8025).
