@@ -5,7 +5,7 @@ name: Build quickstart images
 #   ghcr.io/shopbite-de/shopbite-storefront  the storefront/ folder with the newest @shopbite-de/storefront 2.x
 # Both are published as `candidate` first. The smoke test (test/smoke.mjs) runs the whole stack
 # with them and orders a pizza; only then `latest` moves. The storefront image carries the tested
-# storefront release in the label de.shopbite.storefront.version, which the lead demos build from.
+# storefront release in the label de.shopbite.storefront.version.
 # The weekly run picks up new storefront releases and the security rebuilds of the base images.
 
 on:
