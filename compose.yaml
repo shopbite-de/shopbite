@@ -167,6 +167,11 @@ services:
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_LISTING: 60
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_VARIANT: 60
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_CATEGORY: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_NAVIGATION: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_SEO_URL: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_PAYMENT_METHODS: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_BUSINESS_HOURS: 60
+      NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_HOLIDAYS: 60
     # access key, country and menu category come from the setup service
     entrypoint: ["sh", "-c", "set -a && . /config/storefront.env && set +a && exec node .output/server/index.mjs"]
     volumes:
