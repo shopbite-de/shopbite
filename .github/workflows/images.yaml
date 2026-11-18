@@ -146,7 +146,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Smoke test (storefront ${{ needs.resolve.outputs.storefront }})
         working-directory: test

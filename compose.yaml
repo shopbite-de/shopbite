@@ -129,7 +129,7 @@ services:
   # Creates the ShopBite sales channel, opening hours and the demo menu (setup/menu.json).
   # Runs on every start and skips everything that already exists.
   setup:
-    image: python:3.13-alpine
+    image: python:3.14-alpine
     restart: "no"
     environment:
       SHOPWARE_URL: http://shopware:8000
