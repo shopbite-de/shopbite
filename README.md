@@ -102,7 +102,7 @@ docker compose -f compose.yaml -f compose.build.yaml up -d --build
 
 ## Going live
 
-This stack is made for trying ShopBite locally. It uses fixed secrets and plain HTTP. For a real shop, follow the [documentation](https://shopbite.de/docs/intro): the production setup in [shopbite-de/shopware](https://github.com/shopbite-de/shopware) adds TLS, S3 storage and backups, and the storefront runs as your own Nuxt project on top of the ShopBite layer.
+This stack is made for trying ShopBite locally. It uses fixed secrets and plain HTTP. For a real shop, follow the [documentation](https://shopbite.de/docs/intro): the production setup in [shopbite-de/shopware](https://github.com/shopbite-de/shopware) adds TLS, S3 storage and backups, and the storefront runs as your own Nuxt project on top of the ShopBite layer. The ports listen on `127.0.0.1` only; `BIND_ADDRESS=0.0.0.0` in `.env` opens them to your network, together with your own `ADMIN_PASSWORD`, `APP_SECRET` and `INSTANCE_ID`.
 
 ## Troubleshooting
 
