@@ -94,9 +94,9 @@ services:
   shopware:
     <<: *shopware
     ports:
-      - "8000:8000"
+      - "${BIND_ADDRESS:-127.0.0.1}:8000:8000"
       # the storefront shares this container's network (see below), so its port is published here
-      - "3000:3000"
+      - "${BIND_ADDRESS:-127.0.0.1}:3000:3000"
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/api/_info/health-check"]
       start_period: 30s
@@ -185,7 +185,7 @@ services:
     image: axllent/mailpit:latest
     restart: unless-stopped
     ports:
-      - "8025:8025"
+      - "${BIND_ADDRESS:-127.0.0.1}:8025:8025"
 
 volumes:
   db-data:
