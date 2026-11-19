@@ -5,6 +5,9 @@
 //               the cart, Admin API users bound to a branch see only that branch
 //   storefront  security headers, generic errors of the address autocomplete, validated
 //               listing parameters, one-time secrets leave the address bar
+//   lead times  delivery and pickup with their own lead time (shipping methods "Lieferung" and
+//               "Abholung" of setup/setup.py): config and settings routes, ordering window per
+//               method, wording, earliest time and order comment in the checkout
 //
 //   docker compose -f compose.yaml -f test/compose.hardening.yaml up -d --no-deps storefront
 //   cd test && npm ci && npx playwright install chromium
@@ -16,10 +19,12 @@
 // checks run only when the installed plugin is newer than PLUGIN_WITHOUT (the last release
 // without these changes), the storefront checks only when STOREFRONT_LAYER_VERSION (the
 // @shopbite-de/storefront release of the image, CI passes it) is unset or newer than
-// STOREFRONT_WITHOUT. HARDENING_FORCE=1 runs everything, e.g. to see the checks fail on old images.
+// STOREFRONT_WITHOUT; the lead time checks likewise against PLUGIN_WITHOUT_LEAD_TIMES and
+// STOREFRONT_WITHOUT_LEAD_TIMES. HARDENING_FORCE=1 runs everything, e.g. to see the checks fail on
+// old images.
 //
-// Settings changed for a check (ordering pause, holiday, opening hours, a staff user) are
-// restored in finally blocks.
+// Settings changed for a check (ordering pause, holiday, opening hours, a lead time, a staff
+// user) are restored in finally blocks.
 //
 // Env: STOREFRONT_URL, SHOPWARE_URL, ADMIN_USER, ADMIN_PASSWORD, STOREFRONT_LAYER_VERSION,
 // HARDENING_GEOAPIFY_KEY (the dummy key the stack was started with, see compose.hardening.yaml),
@@ -40,12 +45,19 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 // Last releases without the changes under test; newer versions (and dev builds) contain them.
 const PLUGIN_WITHOUT = "1.10.1";
 const STOREFRONT_WITHOUT = "2.4.0";
+// lead time per shipping method (shopbite#6)
+const PLUGIN_WITHOUT_LEAD_TIMES = "1.11.0";
+const STOREFRONT_WITHOUT_LEAD_TIMES = "2.5.0";
 
 // Ids of the quickstart setup (setup/setup.py) and the plugin (StaffRoleInstaller)
 const SHOPBITE_CHANNEL_NAME = "ShopBite";
 const PERSONAL_ROLE_ID = "493f47fa65684ad8829c852f523fe45c";
 const BRANCH_FIELD = "shopbite_sales_channel_ids";
 const ORDERING_OPEN = "ShopBitePlugin.config.isCheckoutEnabled";
+// shipping methods of setup/setup.py with fulfillment and lead time
+const DELIVERY = { technicalName: "shopbite_delivery", name: "Lieferung", fulfillment: "delivery", minutes: 30, wording: "Wunschlieferzeit" };
+const PICKUP = { technicalName: "shopbite_pickup", name: "Abholung", fulfillment: "pickup", minutes: 15, wording: "Wunschabholzeit" };
+const DEFAULT_TIME_ZONE = "Europe/Berlin"; // the plugin's, when the sales channel has none
 
 // Demo menu (setup/menu.json): a pizza with sizes, a main ingredient and an extra
 const DISH = "Pizza Margherita";
@@ -135,17 +147,25 @@ expect(channel, `no sales channel "${SHOPBITE_CHANNEL_NAME}", did the setup serv
 const [plugin] = await admin.search("plugin", { filter: [{ type: "equals", field: "name", value: "ShopBitePlugin" }] });
 const pluginVersion = plugin?.version ?? "missing";
 const storefrontVersion = process.env.STOREFRONT_LAYER_VERSION || "";
-const runPlugin = FORCE || newer(pluginVersion, PLUGIN_WITHOUT);
-const runStorefront = FORCE || !storefrontVersion || newer(storefrontVersion, STOREFRONT_WITHOUT);
-console.log(
-  `ShopBite plugin ${pluginVersion}${runPlugin ? "" : ` (not newer than ${PLUGIN_WITHOUT}, plugin checks skipped)`}, ` +
-    `storefront ${storefrontVersion || "unknown"}${runStorefront ? "" : ` (not newer than ${STOREFRONT_WITHOUT}, storefront checks skipped)`}`,
-);
+const pluginHas = (without) => FORCE || newer(pluginVersion, without);
+const storefrontHas = (without) => FORCE || !storefrontVersion || newer(storefrontVersion, without);
+console.log(`ShopBite plugin ${pluginVersion}, storefront ${storefrontVersion || "unknown"}`);
 
-const pluginCheck = (name, fn) =>
-  check(name, runPlugin ? fn : () => ({ skip: `plugin ${pluginVersion} predates the change` }));
-const storefrontCheck = (name, fn) =>
-  check(name, runStorefront ? fn : () => ({ skip: `storefront ${storefrontVersion} predates the change` }));
+/** Runs the check when plugin and storefront are newer than the given releases, else skips it. */
+function gatedCheck(name, { plugin, storefront }, fn) {
+  if (plugin && !pluginHas(plugin)) {
+    return check(name, () => ({ skip: `plugin ${pluginVersion} is not newer than ${plugin}` }));
+  }
+  if (storefront && !storefrontHas(storefront)) {
+    return check(name, () => ({ skip: `storefront ${storefrontVersion} is not newer than ${storefront}` }));
+  }
+  return check(name, fn);
+}
+const pluginCheck = (name, fn) => gatedCheck(name, { plugin: PLUGIN_WITHOUT }, fn);
+const storefrontCheck = (name, fn) => gatedCheck(name, { storefront: STOREFRONT_WITHOUT }, fn);
+const leadTimeCheck = (name, fn) => gatedCheck(name, { plugin: PLUGIN_WITHOUT_LEAD_TIMES }, fn);
+const leadTimeStorefrontCheck = (name, fn) =>
+  gatedCheck(name, { plugin: PLUGIN_WITHOUT_LEAD_TIMES, storefront: STOREFRONT_WITHOUT_LEAD_TIMES }, fn);
 
 /** The dish of the demo menu: first size variant, its number, the extra and the label the server builds. */
 async function demoDish() {
@@ -261,6 +281,42 @@ async function expectOrderBlocked(store, key) {
   expect(!order.ok, `order was placed (HTTP ${order.status}, ${order.data?.orderNumber ?? ""})`);
 }
 
+// --- Browser -------------------------------------------------------------------------------
+
+/** Fills the guest form of the one-page checkout, saves it and waits for the order button. */
+async function saveGuestDetails(page, email) {
+  for (const [label, value] of [
+    ["Vorname", "Max"],
+    ["Nachname", "Muster"],
+    ["E-Mail", email],
+    ["Straße und Hausnummer", "Musterstraße 1"],
+    ["PLZ", "12345"],
+    ["Ort", "Musterstadt"],
+    ["Telefon", "0123456789"],
+  ]) {
+    await page.getByLabel(label, { exact: true }).first().fill(value);
+  }
+  await page.getByText("Ich habe die Datenschutzerklärung").click();
+  await page.getByRole("button", { name: "Angaben speichern", exact: true }).click();
+  await page.getByRole("button", { name: "Zahlungspflichtig bestellen", exact: true }).waitFor();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("button")].some(
+      (b) => b.textContent.trim() === "Zahlungspflichtig bestellen" && !b.disabled,
+    ),
+  );
+}
+
+/** Waits until the element's attribute has the value. */
+async function expectAttribute(locator, attribute, value) {
+  await locator.page().waitForFunction(
+    ([element, a, v]) => element?.getAttribute(a) === v,
+    [await locator.elementHandle(), attribute, value],
+    { timeout: 10_000 },
+  ).catch(async () => {
+    throw new Error(`${attribute} of ${locator} is ${json(await locator.getAttribute(attribute))}, expected ${json(value)}`);
+  });
+}
+
 // --- Plugin: dish line items -------------------------------------------------------------
 
 await pluginCheck("dish from the storefront: server label and removed ingredient in the order", async () => {
@@ -284,25 +340,7 @@ await pluginCheck("dish from the storefront: server label and removed ingredient
     await page.getByRole("group", { name: `Menge ${dish.label}` }).first().getByText("2", { exact: true }).waitFor();
     await page.waitForLoadState("networkidle");
 
-    for (const [label, value] of [
-      ["Vorname", "Max"],
-      ["Nachname", "Muster"],
-      ["E-Mail", email],
-      ["Straße und Hausnummer", "Musterstraße 1"],
-      ["PLZ", "12345"],
-      ["Ort", "Musterstadt"],
-      ["Telefon", "0123456789"],
-    ]) {
-      await page.getByLabel(label, { exact: true }).first().fill(value);
-    }
-    await page.getByText("Ich habe die Datenschutzerklärung").click();
-    await page.getByRole("button", { name: "Angaben speichern", exact: true }).click();
-    await page.getByRole("button", { name: "Zahlungspflichtig bestellen", exact: true }).waitFor();
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll("button")].some(
-        (b) => b.textContent.trim() === "Zahlungspflichtig bestellen" && !b.disabled,
-      ),
-    );
+    await saveGuestDetails(page, email);
     await page.getByRole("button", { name: "Zahlungspflichtig bestellen", exact: true }).click();
     await page.waitForURL(/\/erfolg/);
   } catch (error) {
@@ -407,8 +445,8 @@ await pluginCheck("holiday today blocks the order", async () => {
   }
 });
 
-await pluginCheck("opening hours that ended block the order", async () => {
-  const store = await guestCart();
+/** Runs `fn` with every day of the ShopBite channel open from 00:00 to `closingTime`, then restores the hours. */
+async function withClosingTime(closingTime, fn) {
   const original = await admin.search("shopbite-business-hour", {
     filter: [{ type: "equals", field: "salesChannelId", value: channel.id }],
   });
@@ -420,17 +458,22 @@ await pluginCheck("opening hours that ended block the order", async () => {
     closingTime,
   });
   try {
-    // every day 00:00 to 00:01: over for today whenever this runs (the quickstart has 00:00 to 23:59)
-    const ended = original.map((hour) => ({ ...fields(hour), openingTime: "00:00", closingTime: "00:01" }));
+    const changed = original.map((hour) => ({ ...fields(hour), openingTime: "00:00", closingTime }));
     await admin.must("POST", "/_action/sync", [
-      { action: "upsert", entity: "shopbite_business_hour", payload: ended },
+      { action: "upsert", entity: "shopbite_business_hour", payload: changed },
     ]);
-    await expectOrderBlocked(store, "shopbite-ordering-closed");
+    return await fn();
   } finally {
     await admin.must("POST", "/_action/sync", [
       { action: "upsert", entity: "shopbite_business_hour", payload: original.map(fields) },
     ]);
   }
+}
+
+await pluginCheck("opening hours that ended block the order", async () => {
+  const store = await guestCart();
+  // every day 00:00 to 00:01: over for today whenever this runs (the quickstart has 00:00 to 23:59)
+  await withClosingTime("00:01", () => expectOrderBlocked(store, "shopbite-ordering-closed"));
 });
 
 // --- Plugin: branch binding --------------------------------------------------------------
@@ -572,6 +615,180 @@ await storefrontCheck("one-time hash leaves the address bar (password reset, reg
   } finally {
     await page.close();
   }
+});
+
+// --- Lead time per shipping method ---------------------------------------------------------
+
+/** A shipping method of setup/setup.py (DELIVERY or PICKUP) as the Admin API returns it. */
+async function shippingMethod(spec) {
+  const [method] = await admin.search("shipping-method", {
+    filter: [{ type: "equals", field: "technicalName", value: spec.technicalName }],
+  });
+  expect(method, `no shipping method ${spec.technicalName} (did setup/setup.py create it?)`);
+  return method;
+}
+
+/** "HH:MM" of `date` in `timeZone`, and whether that is still the same day as now. */
+function wallClock(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  const format = (d) => Object.fromEntries(formatter.formatToParts(d).map((p) => [p.type, p.value]));
+  const then = format(date);
+  const today = format(new Date());
+  return { time: `${then.hour}:${then.minute}`, sameDay: then.day === today.day };
+}
+
+await leadTimeCheck("config route lists delivery and pickup with their lead times", async () => {
+  const delivery = await shippingMethod(DELIVERY);
+  const pickup = await shippingMethod(PICKUP);
+  const config = await storeSession().must("GET", "/shopbite/config");
+  expect(!("deliveryTime" in config), `deliveryTime is still in the config: ${json(config)}`);
+  expect(Array.isArray(config.shippingMethods), `no shippingMethods in ${json(config)}`);
+  for (const [method, spec] of [
+    [delivery, DELIVERY],
+    [pickup, PICKUP],
+  ]) {
+    const entry = config.shippingMethods.find((m) => m.id === method.id);
+    expect(
+      entry?.fulfillment === spec.fulfillment && entry?.leadTimeMinutes === spec.minutes,
+      `${spec.name}: ${json(entry)}, expected ${spec.fulfillment} with ${spec.minutes} minutes`,
+    );
+  }
+});
+
+await leadTimeCheck("settings route changes the lead time of one shipping method", async () => {
+  const pickup = await shippingMethod(PICKUP);
+  const before = await admin.must("GET", `/_action/shopbite/settings/${channel.id}`);
+  expect(!("deliveryMinutes" in before), `deliveryMinutes is still in the settings: ${json(before)}`);
+  const original = before.shippingMethods?.find((m) => m.id === pickup.id);
+  expect(original?.fulfillment === "pickup", `settings: ${json(before.shippingMethods)}`);
+  const changed = original.leadTimeMinutes + 5;
+  try {
+    const after = await admin.must("PATCH", `/_action/shopbite/settings/${channel.id}`, {
+      leadTimes: { [pickup.id]: changed },
+    });
+    const entry = after.shippingMethods?.find((m) => m.id === pickup.id);
+    expect(entry?.leadTimeMinutes === changed && entry.leadTimeMinutesSet === true, `after PATCH: ${json(entry)}`);
+    const delivery = after.shippingMethods?.find((m) => m.fulfillment === "delivery");
+    expect(delivery?.leadTimeMinutes === DELIVERY.minutes, `the delivery method changed too: ${json(delivery)}`);
+    const config = await storeSession().must("GET", "/shopbite/config");
+    const listed = config.shippingMethods?.find((m) => m.id === pickup.id);
+    expect(listed?.leadTimeMinutes === changed, `config route after PATCH: ${json(listed)}`);
+    const [stored] = await admin.search("shipping-method", { ids: [pickup.id] });
+    expect(
+      stored.customFields?.shopbite_fulfillment === "pickup",
+      `fulfillment lost after PATCH (custom fields not merged): ${json(stored.customFields)}`,
+    );
+    const unknown = await admin.request("PATCH", `/_action/shopbite/settings/${channel.id}`, {
+      leadTimes: { [randomUUID().replaceAll("-", "")]: 20 },
+    });
+    expect(unknown.status === 400, `lead time of a method outside the channel: HTTP ${unknown.status}, expected 400`);
+  } finally {
+    await admin.must("PATCH", `/_action/shopbite/settings/${channel.id}`, {
+      leadTimes: { [pickup.id]: original.leadTimeMinutes },
+    });
+  }
+});
+
+await leadTimeCheck("ordering window uses the lead time of the selected shipping method", async () => {
+  const delivery = await shippingMethod(DELIVERY);
+  const pickup = await shippingMethod(PICKUP);
+  // closing in 20 minutes: enough for a pickup (15), too late for a delivery (30)
+  const closing = wallClock(new Date(Date.now() + 20 * 60_000), channel.businessTimeZone || DEFAULT_TIME_ZONE);
+  if (!closing.sameDay) return { skip: "less than 20 minutes to midnight in the shop's time zone" };
+
+  const deliveryStore = await guestCart();
+  const pickupStore = await guestCart();
+  await pickupStore.must("PATCH", "/context", { shippingMethodId: pickup.id });
+  await withClosingTime(closing.time, async () => {
+    await deliveryStore.must("PATCH", "/context", { shippingMethodId: delivery.id });
+    await expectOrderBlocked(deliveryStore, "shopbite-ordering-closed");
+
+    const errors = await cartErrors(pickupStore);
+    expect(!errors.includes("shopbite-ordering-closed"), `pickup cart errors ${json(errors)}`);
+    const order = await pickupStore.request("POST", "/checkout/order", {});
+    expect(order.ok, `pickup order refused with closing at ${closing.time}: HTTP ${order.status} ${json(order.data).slice(0, 300)}`);
+  });
+});
+
+await leadTimeStorefrontCheck("checkout: wording and earliest time follow the shipping method, pickup comment", async () => {
+  const email = `hardening-pickup-${Date.now()}@example.com`;
+  browser ??= await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.setDefaultTimeout(30_000);
+  try {
+    // the quickstart closes at 23:59 (browser time): no delivery time is left after 23:29
+    const lateNight = await page.evaluate(() => {
+      const d = new Date(Date.now() + 31 * 60_000);
+      return d.getDate() !== new Date().getDate() || d.getHours() * 60 + d.getMinutes() > 23 * 60 + 59;
+    });
+    if (lateNight) return { skip: "less than 30 minutes to the quickstart's closing time 23:59" };
+
+    await page.goto(`${STOREFRONT}/Speisekarte/Pizza/`, { waitUntil: "networkidle" });
+    await page.getByText(DISH).first().click();
+    await page.getByRole("button", { name: /In den Warenkorb/ }).click();
+    await page.waitForLoadState("networkidle");
+    await page.goto(`${STOREFRONT}/bestellung/kasse`, { waitUntil: "networkidle" });
+
+    const methods = page.getByRole("radiogroup", { name: "Versandarten" });
+    const choose = async (spec) => {
+      const radio = methods.getByRole("radio", { name: new RegExp(`^${spec.name}`) });
+      await radio.click();
+      await expectAttribute(radio, "aria-checked", "true");
+      const field = page.getByLabel(spec.wording, { exact: true });
+      await field.waitFor();
+      await page.getByText(new RegExp(`ca\\. ${spec.minutes} Minuten`)).first().waitFor();
+      // the earliest time is now plus the method's lead time (browser time, seconds cut off)
+      await page.waitForFunction(
+        ({ minutes }) => {
+          const input = document.getElementById("delivery-time");
+          if (!input?.min) return false;
+          const [h, m] = input.min.split(":").map(Number);
+          const now = new Date();
+          const diff = (h * 60 + m - (now.getHours() * 60 + now.getMinutes()) + 1440) % 1440;
+          return diff >= minutes - 2 && diff <= minutes;
+        },
+        { minutes: spec.minutes },
+        { timeout: 10_000 },
+      ).catch(async () => {
+        const min = await page.locator("#delivery-time").getAttribute("min");
+        throw new Error(`${spec.name}: earliest time ${min}, expected now plus ${spec.minutes} minutes`);
+      });
+    };
+    await choose(PICKUP);
+    await choose(DELIVERY);
+    await choose(PICKUP);
+
+    await saveGuestDetails(page, email);
+    await expectAttribute(methods.getByRole("radio", { name: /^Abholung/ }), "aria-checked", "true");
+    await page.getByRole("button", { name: "Zahlungspflichtig bestellen", exact: true }).click();
+    await page.waitForURL(/\/erfolg/);
+  } catch (error) {
+    await page.screenshot({ path: `${SHOTS ?? "."}/hardening-failed.png`, fullPage: true }).catch(() => {});
+    throw error;
+  } finally {
+    await page.close();
+  }
+
+  const pickup = await shippingMethod(PICKUP);
+  const [order] = await admin.search("order", {
+    filter: [{ type: "equals", field: "orderCustomer.email", value: email }],
+    associations: { deliveries: {} },
+  });
+  expect(order, `no order of ${email}`);
+  expect(
+    /^Wunschabholzeit: \d{2}:\d{2}$/.test(order.customerComment ?? ""),
+    `comment ${json(order.customerComment)}, expected "Wunschabholzeit: HH:MM"`,
+  );
+  expect(
+    order.deliveries?.[0]?.shippingMethodId === pickup.id,
+    `shipping method ${order.deliveries?.[0]?.shippingMethodId}, expected ${pickup.id} (Abholung)`,
+  );
 });
 
 await browser?.close();

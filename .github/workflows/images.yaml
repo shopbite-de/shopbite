@@ -159,7 +159,8 @@ jobs:
           npm run smoke
 
       # Its checks skip themselves while the images carry plugin 1.10.1 or storefront 2.4.0 (or
-      # older), the last releases without the hardening; from the next releases on they gate.
+      # older), the last releases without the hardening, the lead time checks while they carry
+      # plugin 1.11.0 or storefront 2.5.0; from the next releases on they gate.
       - name: Hardening test
         working-directory: test
         env:
