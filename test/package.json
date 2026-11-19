@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "smoke": "node smoke.mjs"
+    "smoke": "node smoke.mjs",
+    "hardening": "node hardening.mjs"
   },
   "devDependencies": {
     "playwright": "^1.65.1"

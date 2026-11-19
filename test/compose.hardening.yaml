@@ -1,0 +1,10 @@
+# Overlay for the hardening test (test/hardening.mjs): gives the storefront a dummy Geoapify key,
+# so the address autocomplete validates its parameters instead of answering "no suggestions".
+# The key is invalid; the checks only send requests the route must refuse before any lookup.
+#
+#   docker compose -f compose.yaml -f test/compose.hardening.yaml up -d storefront
+#   HARDENING_GEOAPIFY_KEY=hardening-dummy-key npm run hardening   (in test/)
+services:
+  storefront:
+    environment:
+      NUXT_GEOAPIFY_API_KEY: hardening-dummy-key

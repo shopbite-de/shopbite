@@ -4,7 +4,8 @@ name: Build quickstart images
 #   ghcr.io/shopbite-de/shopbite-shopware    shopbite-de/shopware (main) with local file storage
 #   ghcr.io/shopbite-de/shopbite-storefront  the storefront/ folder with the newest @shopbite-de/storefront 2.x
 # Both are published as `candidate` first. The smoke test (test/smoke.mjs) runs the whole stack
-# with them and orders a pizza; only then `latest` moves. The storefront image carries the tested
+# with them and orders a pizza, the hardening test (test/hardening.mjs) checks the security
+# hardening of plugin and storefront; only then `latest` moves. The storefront image carries the tested
 # storefront release in the label de.shopbite.storefront.version.
 # The weekly run picks up new storefront releases and the security rebuilds of the base images.
 
@@ -156,6 +157,19 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
           npm run smoke
+
+      # Its checks skip themselves while the images carry plugin 1.10.1 or storefront 2.4.0 (or
+      # older), the last releases without the hardening; from the next releases on they gate.
+      - name: Hardening test
+        working-directory: test
+        env:
+          STOREFRONT_LAYER_VERSION: ${{ needs.resolve.outputs.storefront }}
+          HARDENING_GEOAPIFY_KEY: hardening-dummy-key
+          SMOKE_SCREENSHOTS: ${{ runner.temp }}/smoke
+        run: |
+          docker compose -f ../compose.yaml -f compose.hardening.yaml up -d --no-deps storefront
+          timeout 300 bash -c 'until curl -sf -o /dev/null http://localhost:3000/; do sleep 3; done'
+          npm run hardening
 
       - name: Logs
         if: failure()

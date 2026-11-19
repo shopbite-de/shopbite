@@ -18,6 +18,7 @@ Sessions for any ShopBite work start here. The other `shopbite-de` repos are clo
 - `shopware/Dockerfile`: builds `shopbite-de/shopware` (named build context `shopware`) with `shopware/filesystem.yaml` replacing the S3 config, so files live on local volumes.
 - `.github/workflows/images.yaml`: builds `ghcr.io/shopbite-de/shopbite-shopware` (shopware main) and `ghcr.io/shopbite-de/shopbite-storefront` (`storefront/` folder) for amd64 + arm64 on push, weekly and on demand. Images are pushed as `candidate`, the smoke test runs the whole stack with them, and only then `latest` + `YYYYMMDD` move. A change that breaks the smoke test therefore blocks the release.
 - `test/smoke.mjs`: Playwright end-to-end test against the running stack (start page, menu section, pizza with an extra, guest checkout, contact form, both mails in Mailpit). It matches German UI texts and SEO paths (`/Speisekarte/Pizza/`, `/bestellung/kasse`), so update it together with storefront text or menu changes. Env: `STOREFRONT_URL`, `MAILPIT_URL`, `SMOKE_SCREENSHOTS=<dir>`.
+- `test/hardening.mjs` (`npm run hardening`): end-to-end checks of the plugin and storefront hardening, same style as the smoke test, every check prints ok/FAIL/skip. Plugin: dish line items get label and payload (`productNumber`, `without`) from the products (UI order with a removed ingredient and a quantity change, forged Store API request), orders are blocked while ordering is paused, on a holiday and after the opening hours, a staff user bound to another sales channel sees no ShopBite orders, gets 403 on its settings and on `sales_channel.orders`. Storefront: security headers and `private, no-store` on HTML, generic autocomplete errors, 400 for an unknown listing `order`, `hash` removed from the reset and confirmation URLs. It changes settings, hours and users through the Admin API and restores them in `finally`. Version gate: plugin checks run when the installed plugin is newer than 1.10.1 (Admin API), storefront checks when `STOREFRONT_LAYER_VERSION` is unset or newer than 2.4.0; `HARDENING_FORCE=1` runs all (to see them fail on old images). `test/compose.hardening.yaml` gives the storefront a dummy Geoapify key (`HARDENING_GEOAPIFY_KEY=hardening-dummy-key`); the checks never trigger a lookup. CI runs it after the smoke test. Not covered: passkeys and backoffice flows (no backoffice in this stack), real Geoapify lookups.
 - `compose.build.yaml`: builds the Shopware image from the Git repository instead of pulling.
 
 ## Verify a change
@@ -30,6 +31,13 @@ Then order a pizza as a guest on http://localhost:3000 and check the mail on htt
 
 ```bash
 cd test && npm ci && npx playwright install chromium && npm run smoke
+```
+
+and the hardening test, with the storefront restarted on a dummy Geoapify key:
+
+```bash
+docker compose -f compose.yaml -f test/compose.hardening.yaml up -d --no-deps storefront
+cd test && HARDENING_GEOAPIFY_KEY=hardening-dummy-key npm run hardening
 ```
 
 Test locally built images with `SHOPWARE_IMAGE` / `STOREFRONT_IMAGE` (see `.env.example`, also `ADMIN_PASSWORD`, `SEED_DEMO_MENU`).
