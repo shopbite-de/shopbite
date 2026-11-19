@@ -1,5 +1,5 @@
 // End-to-end smoke test of the running quickstart stack (docker compose up -d):
-// start page, pizza with an extra, guest checkout, contact form, both mails in Mailpit.
+// start page, pizza with an extra, guest checkout with delivery, contact form, both mails in Mailpit.
 //
 //   cd test && npm ci && npx playwright install chromium && npm run smoke
 //
@@ -61,6 +61,10 @@ await step("pizza with an extra into the cart", async () => {
 });
 
 await step("guest checkout", async () => {
+  // delivery is preselected: the time field says "Wunschlieferzeit" (storefront 2.5.0 and older:
+  // "Wunschzeit für Lieferung oder Abholung, frühestens") and holds the earliest time
+  await page.getByLabel(/^Wunsch(lieferzeit|zeit für Lieferung)/).first().waitFor();
+  await page.waitForFunction(() => /^\d{2}:\d{2}$/.test(document.getElementById("delivery-time")?.value ?? ""));
   for (const [label, value] of [
     ["Vorname", "Max"],
     ["Nachname", "Muster"],

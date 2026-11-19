@@ -3,8 +3,9 @@
 
 Runs as the `setup` service of compose.yaml after Shopware is up:
 
-1. creates the sales channel "ShopBite" (navigation, footer, payment,
-   shipping, the storefront domain) with opening hours for every day
+1. creates the sales channel "ShopBite" (navigation, footer, payment, the
+   shipping methods "Lieferung" and "Abholung" with their lead times, the
+   storefront domain) with opening hours for every day
 2. seeds the demo menu from menu.json (categories, products, variants, extras,
    images from images/<number>.webp), unless SEED_DEMO_MENU=0
 3. writes /config/storefront.env (access key, country, menu category) for the
@@ -52,6 +53,17 @@ SALES_CHANNEL_ID = hid("sales-channel")
 NAV_ROOT_ID = hid("category:root")
 MENU_ID = hid("category:speisekarte")
 FOOTER_ROOT_ID = hid("category:footer")
+DELIVERY_ID = hid("shipping-method:delivery")
+PICKUP_ID = hid("shipping-method:pickup")
+
+# Shipping methods of the demo shop: fulfillment and lead time are the custom fields
+# shopbite_fulfillment and shopbite_lead_time_minutes of the ShopBite plugin
+SHIPPING_METHODS = [
+    {"id": DELIVERY_ID, "technicalName": "shopbite_delivery", "name": "Lieferung",
+     "description": "Wir bringen Ihre Bestellung zu Ihnen nach Hause.", "fulfillment": "delivery", "minutes": 30},
+    {"id": PICKUP_ID, "technicalName": "shopbite_pickup", "name": "Abholung",
+     "description": "Holen Sie Ihre Bestellung bei uns ab.", "fulfillment": "pickup", "minutes": 15},
+]
 
 
 class Api:
@@ -124,6 +136,22 @@ def create_sales_channel(api, ctx):
     ]
     api.sync([{"action": "upsert", "entity": "category", "payload": categories}])
 
+    # free of charge, available like Shopware's default method (its delivery time and availability rule)
+    api.sync([{"action": "upsert", "entity": "shipping_method", "payload": [{
+        "id": m["id"],
+        "technicalName": m["technicalName"],
+        "name": m["name"],
+        "description": m["description"],
+        "active": True,
+        "position": position,
+        "taxType": "auto",
+        "deliveryTimeId": ctx["shipping"]["deliveryTimeId"],
+        "availabilityRuleId": ctx["shipping"]["availabilityRuleId"],
+        "prices": [{"id": hid(f"shipping-price:{m['technicalName']}"), "calculation": 1, "quantityStart": 1,
+                    "currencyPrice": [{"currencyId": ctx["currency"], "gross": 0, "net": 0, "linked": False}]}],
+        "customFields": {"shopbite_fulfillment": m["fulfillment"], "shopbite_lead_time_minutes": m["minutes"]},
+    } for position, m in enumerate(SHIPPING_METHODS, start=1)]}])
+
     api.sync([{"action": "upsert", "entity": "sales_channel", "payload": [{
         "id": SALES_CHANNEL_ID,
         "typeId": STOREFRONT_TYPE_ID,
@@ -133,26 +161,23 @@ def create_sales_channel(api, ctx):
         "languageId": ctx["language"],
         "currencyId": ctx["currency"],
         "paymentMethodId": ctx["payment"],
-        "shippingMethodId": ctx["shipping"],
+        "shippingMethodId": DELIVERY_ID,
         "countryId": ctx["country"],
         "customerGroupId": ctx["customer_group"],
         "navigationCategoryId": NAV_ROOT_ID,
         "languages": [{"id": ctx["language"]}],
         "currencies": [{"id": ctx["currency"]}],
         "paymentMethods": [{"id": ctx["payment"]}],
-        "shippingMethods": [{"id": ctx["shipping"]}],
+        "shippingMethods": [{"id": m["id"]} for m in SHIPPING_METHODS],
         "countries": [{"id": ctx["country"]}],
         # registration and password recovery links point to the storefront
         "domains": [{"id": hid("domain:" + url), "url": url, "languageId": ctx["language"],
                      "currencyId": ctx["currency"], "snippetSetId": ctx["snippet_set"]} for url in (STOREFRONT_URL, DEV_URL)],
     }]}])
 
-    # names that fit a delivery shop (the defaults are "Nachnahme" and "Standard")
-    api.sync([
-        {"action": "upsert", "entity": "payment_method", "payload": [{"id": ctx["payment"], "name": "Barzahlung",
-                                                                     "description": "Bar bei Lieferung oder Abholung"}]},
-        {"action": "upsert", "entity": "shipping_method", "payload": [{"id": ctx["shipping"], "name": "Lieferung"}]},
-    ])
+    # a name that fits a delivery shop (the default is "Nachnahme")
+    api.sync([{"action": "upsert", "entity": "payment_method", "payload": [{
+        "id": ctx["payment"], "name": "Barzahlung", "description": "Bar bei Lieferung oder Abholung"}]}])
 
     # shop e-mail: sender of all mails and recipient of the contact form (Settings > Basic information)
     api.request("POST", "/api/_action/system-config/batch", {"null": {
@@ -329,7 +354,8 @@ def context(api):
         "country": api.first("country", "iso", "DE"),
         "customer_group": api.search("customer-group", {"limit": 1, "sort": [{"field": "createdAt"}]})[0]["id"],
         "payment": api.first("payment-method", "technicalName", "payment_cashpayment"),
-        "shipping": api.first("shipping-method", "technicalName", "shipping_standard"),
+        "shipping": api.search("shipping-method", {"limit": 1, "filter": [
+            {"type": "equals", "field": "technicalName", "value": "shipping_standard"}]})[0],
         "tax": taxes,
         "media_folder": folders[0]["folder"]["id"],
     }

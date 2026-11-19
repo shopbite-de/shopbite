@@ -19,6 +19,9 @@ Bezahlen Sie bar bei Lieferung oder Abholung.
 - Wir liefern in Musterstadt und Umgebung.
 - Ab 15,00 € Bestellwert liefern wir frei Haus.
 
-## Lieferzeit
+## Liefer- und Abholzeit
 
-In der Regel etwa **30 Minuten**. Zu Stoßzeiten kann es etwas länger dauern.
+- **Lieferung:** in der Regel etwa **30 Minuten**.
+- **Abholung:** in der Regel nach etwa **15 Minuten** abholbereit.
+
+Zu Stoßzeiten kann es etwas länger dauern. Ihre Wunschzeit wählen Sie an der Kasse.
