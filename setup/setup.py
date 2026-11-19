@@ -83,7 +83,7 @@ class Api:
                 result = self.request("POST", "/api/oauth/token", {
                     "grant_type": "password",
                     "client_id": "administration",
-                    "scopes": "write",
+                    "scope": "write",
                     "username": ADMIN_USER,
                     "password": ADMIN_PASSWORD,
                 })
