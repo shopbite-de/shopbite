@@ -42,6 +42,9 @@ DEV_URL = os.environ.get("STOREFRONT_DEV_URL", "http://localhost:3001").rstrip("
 # storefront type, not headless: Shopware only generates SEO URLs (used by the storefront) for this type
 STOREFRONT_TYPE_ID = "8a243080f92e4c719546314b577cf82b"
 NAMESPACE = uuid.UUID("0b5f0c1e-7a4d-4c3b-9e8f-5d6a7b8c9d0e")
+# Shopware's ProductIndexer::UPDATE_IDS_CHUNK_SIZE: it indexes up to this many written products
+# right away and hands any further ones to the message queue
+PRODUCT_BATCH_SIZE = 50
 
 
 def hid(key):
@@ -331,12 +334,21 @@ def seed_menu(api, ctx):
         {"action": "upsert", "entity": "category", "payload": categories},
         {"action": "upsert", "entity": "property_group", "payload": property_groups},
         {"action": "upsert", "entity": "media", "payload": media},
-        {"action": "upsert", "entity": "product", "payload": rows},
-        {"action": "upsert", "entity": "product", "payload": variants},
-        {"action": "upsert", "entity": "product_cross_selling", "payload": cross_sellings},
         {"action": "upsert", "entity": "category", "payload": footer},
         {"action": "upsert", "entity": "sales_channel", "payload": [{"id": SALES_CHANNEL_ID, "footerCategoryId": FOOTER_ROOT_ID}]},
     ])
+    # The product indexer indexes only the first 50 written products of a request right away and
+    # queues the rest for the worker: until it gets to them (after the install's own backlog),
+    # those products have no category tree and their menu sections list nothing. Small requests
+    # keep the whole menu indexed synchronously. The marker product (see main) goes last.
+    # A cross-selling counts as a write of its product, so it goes with that product's request.
+    for batch in product_batches(rows, variants, first=pid[first_product_number()]):
+        ids = {p["id"] for p in batch}
+        operations = [{"action": "upsert", "entity": "product", "payload": batch}]
+        own = [c for c in cross_sellings if c["productId"] in ids]
+        if own:
+            operations.append({"action": "upsert", "entity": "product_cross_selling", "payload": own})
+        api.sync(operations)
 
     for nr, path in images.items():
         if nr not in by_number:
@@ -347,6 +359,25 @@ def seed_menu(api, ctx):
                         raw=f.read(), headers={"Content-Type": "image/webp"})
 
     print(f"seeded {len(rows)} products, {len(variants)} variants, {len(categories)} menu sections, {len(media)} images")
+
+
+def product_batches(rows, variants, first, size=PRODUCT_BATCH_SIZE):
+    """Products in requests of at most `size` products, each main product together with its
+    variants (the indexer queues parents or variants written in another request). Products
+    without a menu section (the extras offered as cross-selling) come first, so they exist when
+    the cross-sellings are written, the family of `first` comes last."""
+    children = {}
+    for v in variants:
+        children.setdefault(v["parentId"], []).append(v)
+    families = [[row] + children.get(row["id"], []) for row in rows]
+    families.sort(key=lambda family: (family[0]["id"] == first, "categories" in family[0]))
+    batches = [[]]
+    for family in families:
+        if batches[-1] and len(batches[-1]) + len(family) > size:
+            batches.append([])
+        batches[-1].extend(family)
+    # main products first, so a variant's parent exists when the variant is written
+    return [sorted(batch, key=lambda p: "parentId" in p) for batch in batches]
 
 
 def load_menu():
@@ -385,7 +416,8 @@ def main():
     ctx = context(api)
     if not api.search("sales-channel", {"ids": [SALES_CHANNEL_ID]}):
         create_sales_channel(api, ctx)
-    # the first product marks a finished seed, so an interrupted run is completed next time
+    # the first product marks a finished seed (seed_menu writes it in its last product request),
+    # so an interrupted run is completed next time
     if SEED_DEMO_MENU and not api.search("product", {"ids": [hid("product:" + first_product_number())]}):
         seed_menu(api, ctx)
     channel = api.search("sales-channel", {"ids": [SALES_CHANNEL_ID]})[0]
