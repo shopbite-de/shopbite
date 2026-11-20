@@ -56,8 +56,8 @@ FOOTER_ROOT_ID = hid("category:footer")
 DELIVERY_ID = hid("shipping-method:delivery")
 PICKUP_ID = hid("shipping-method:pickup")
 
-# Shipping methods of the demo shop: fulfillment and lead time are the custom fields
-# shopbite_fulfillment and shopbite_lead_time_minutes of the ShopBite plugin
+# Shipping methods of the demo shop: the fulfillment is the ShopBite plugin's custom field
+# shopbite_fulfillment, the lead time the method's delivery time (unit minute, min = max)
 SHIPPING_METHODS = [
     {"id": DELIVERY_ID, "technicalName": "shopbite_delivery", "name": "Lieferung",
      "description": "Wir bringen Ihre Bestellung zu Ihnen nach Hause.", "fulfillment": "delivery", "minutes": 30},
@@ -136,7 +136,8 @@ def create_sales_channel(api, ctx):
     ]
     api.sync([{"action": "upsert", "entity": "category", "payload": categories}])
 
-    # free of charge, available like Shopware's default method (its delivery time and availability rule)
+    # free of charge, available like Shopware's default method (its availability rule)
+    delivery_times = minute_delivery_times(api, [m["minutes"] for m in SHIPPING_METHODS])
     api.sync([{"action": "upsert", "entity": "shipping_method", "payload": [{
         "id": m["id"],
         "technicalName": m["technicalName"],
@@ -145,11 +146,11 @@ def create_sales_channel(api, ctx):
         "active": True,
         "position": position,
         "taxType": "auto",
-        "deliveryTimeId": ctx["shipping"]["deliveryTimeId"],
+        "deliveryTimeId": delivery_times[m["minutes"]],
         "availabilityRuleId": ctx["shipping"]["availabilityRuleId"],
         "prices": [{"id": hid(f"shipping-price:{m['technicalName']}"), "calculation": 1, "quantityStart": 1,
                     "currencyPrice": [{"currencyId": ctx["currency"], "gross": 0, "net": 0, "linked": False}]}],
-        "customFields": {"shopbite_fulfillment": m["fulfillment"], "shopbite_lead_time_minutes": m["minutes"]},
+        "customFields": {"shopbite_fulfillment": m["fulfillment"]},
     } for position, m in enumerate(SHIPPING_METHODS, start=1)]}])
 
     api.sync([{"action": "upsert", "entity": "sales_channel", "payload": [{
@@ -190,6 +191,23 @@ def create_sales_channel(api, ctx):
               "openingTime": "00:00", "closingTime": "23:59"} for day in range(1, 8)]
     api.sync([{"action": "upsert", "entity": "shopbite_business_hour", "payload": hours}])
     print("created sales channel ShopBite")
+
+
+def minute_delivery_times(api, minutes):
+    """Delivery time id by minutes: an existing one of unit minute with min = max (the plugin
+    creates such ones too), else a new one named "<n> Minuten"."""
+    existing = api.search("delivery-time", {"filter": [{"type": "equals", "field": "unit", "value": "minute"}],
+                                            "sort": [{"field": "createdAt"}]})
+    ids = {}
+    for row in existing:
+        if row["min"] == row["max"] and row["max"] in minutes:
+            ids.setdefault(row["max"], row["id"])
+    missing = [{"id": hid(f"delivery-time:minute:{n}"), "name": f"{n} Minuten", "unit": "minute", "min": n, "max": n}
+               for n in dict.fromkeys(minutes) if n not in ids]
+    if missing:
+        api.sync([{"action": "upsert", "entity": "delivery_time", "payload": missing}])
+        ids.update({row["min"]: row["id"] for row in missing})
+    return ids
 
 
 def seed_menu(api, ctx):
