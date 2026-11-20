@@ -38,6 +38,10 @@ const SHOPWARE = process.env.SHOPWARE_URL ?? "http://localhost:8000";
 const ADMIN_USER = process.env.ADMIN_USER ?? "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "shopbite";
 const GEOAPIFY_KEY = process.env.HARDENING_GEOAPIFY_KEY ?? "";
+// The storefront computes opening hours and wished times in the restaurant's time
+// zone (storefront 2.7), so the browser runs on that zone too, whatever the
+// CI machine's clock is set to.
+const SHOP_TIME_ZONE = process.env.SHOP_TIME_ZONE ?? "Europe/Berlin";
 const FORCE = process.env.HARDENING_FORCE === "1";
 const SHOTS = process.env.SMOKE_SCREENSHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
@@ -323,7 +327,7 @@ await pluginCheck("dish from the storefront: server label and removed ingredient
   const dish = await demoDish();
   const email = `hardening-ui-${Date.now()}@example.com`;
   browser ??= await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, timezoneId: SHOP_TIME_ZONE });
   page.setDefaultTimeout(30_000);
   try {
     await page.goto(`${STOREFRONT}/Speisekarte/Pizza/`, { waitUntil: "networkidle" });
@@ -603,7 +607,7 @@ await storefrontCheck("listing route rejects an unknown sorting", async () => {
 
 await storefrontCheck("one-time hash leaves the address bar (password reset, registration)", async () => {
   browser ??= await chromium.launch();
-  const page = await browser.newPage();
+  const page = await browser.newPage({ timezoneId: SHOP_TIME_ZONE });
   page.setDefaultTimeout(30_000);
   const hash = randomUUID().replaceAll("-", "");
   try {
@@ -736,7 +740,7 @@ await leadTimeCheck("ordering window uses the lead time of the selected shipping
 await leadTimeStorefrontCheck("checkout: wording and earliest time follow the shipping method, pickup comment", async () => {
   const email = `hardening-pickup-${Date.now()}@example.com`;
   browser ??= await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, timezoneId: SHOP_TIME_ZONE });
   page.setDefaultTimeout(30_000);
   try {
     // the quickstart closes at 23:59 (browser time): no delivery time is left after 23:29
