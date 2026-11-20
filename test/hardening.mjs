@@ -619,10 +619,11 @@ await storefrontCheck("one-time hash leaves the address bar (password reset, reg
 
 // --- Lead time per shipping method ---------------------------------------------------------
 
-/** A shipping method of setup/setup.py (DELIVERY or PICKUP) as the Admin API returns it. */
+/** A shipping method of setup/setup.py (DELIVERY or PICKUP) with its delivery time, as the Admin API returns it. */
 async function shippingMethod(spec) {
   const [method] = await admin.search("shipping-method", {
     filter: [{ type: "equals", field: "technicalName", value: spec.technicalName }],
+    associations: { deliveryTime: {} },
   });
   expect(method, `no shipping method ${spec.technicalName} (did setup/setup.py create it?)`);
   return method;
@@ -658,6 +659,12 @@ await leadTimeCheck("config route lists delivery and pickup with their lead time
       entry?.fulfillment === spec.fulfillment && entry?.leadTimeMinutes === spec.minutes,
       `${spec.name}: ${json(entry)}, expected ${spec.fulfillment} with ${spec.minutes} minutes`,
     );
+    // the lead time is the method's Shopware delivery time
+    const { unit, min, max } = method.deliveryTime ?? {};
+    expect(
+      unit === "minute" && min === spec.minutes && max === spec.minutes,
+      `${spec.name}: delivery time ${json({ unit, min, max })}, expected ${spec.minutes} minutes`,
+    );
   }
 });
 
@@ -668,6 +675,9 @@ await leadTimeCheck("settings route changes the lead time of one shipping method
   const original = before.shippingMethods?.find((m) => m.id === pickup.id);
   expect(original?.fulfillment === "pickup", `settings: ${json(before.shippingMethods)}`);
   const changed = original.leadTimeMinutes + 5;
+  const minuteTimes = async () =>
+    (await admin.search("delivery-time", { filter: [{ type: "equals", field: "unit", value: "minute" }] })).map((t) => t.id);
+  const existingTimes = await minuteTimes();
   try {
     const after = await admin.must("PATCH", `/_action/shopbite/settings/${channel.id}`, {
       leadTimes: { [pickup.id]: changed },
@@ -679,19 +689,26 @@ await leadTimeCheck("settings route changes the lead time of one shipping method
     const config = await storeSession().must("GET", "/shopbite/config");
     const listed = config.shippingMethods?.find((m) => m.id === pickup.id);
     expect(listed?.leadTimeMinutes === changed, `config route after PATCH: ${json(listed)}`);
-    const [stored] = await admin.search("shipping-method", { ids: [pickup.id] });
+    const stored = await shippingMethod(PICKUP);
+    const { unit, min, max } = stored.deliveryTime ?? {};
+    expect(
+      unit === "minute" && min === changed && max === changed,
+      `delivery time after PATCH ${json({ unit, min, max })}, expected ${changed} minutes`,
+    );
     expect(
       stored.customFields?.shopbite_fulfillment === "pickup",
-      `fulfillment lost after PATCH (custom fields not merged): ${json(stored.customFields)}`,
+      `fulfillment lost after PATCH: ${json(stored.customFields)}`,
     );
     const unknown = await admin.request("PATCH", `/_action/shopbite/settings/${channel.id}`, {
       leadTimes: { [randomUUID().replaceAll("-", "")]: 20 },
     });
     expect(unknown.status === 400, `lead time of a method outside the channel: HTTP ${unknown.status}, expected 400`);
   } finally {
-    await admin.must("PATCH", `/_action/shopbite/settings/${channel.id}`, {
-      leadTimes: { [pickup.id]: original.leadTimeMinutes },
-    });
+    // the method's own delivery time again, and the delivery times the PATCH created are removed
+    await admin.must("PATCH", `/shipping-method/${pickup.id}`, { deliveryTimeId: pickup.deliveryTimeId });
+    for (const id of (await minuteTimes()).filter((id) => !existingTimes.includes(id))) {
+      await admin.request("DELETE", `/delivery-time/${id}`);
+    }
   }
 });
 
