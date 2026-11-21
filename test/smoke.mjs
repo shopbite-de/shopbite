@@ -75,7 +75,15 @@ await step("every menu section lists dishes", async () => {
 await step("pizza with an extra into the cart", async () => {
   await page.getByText("Pizza Margherita").first().click();
   await page.getByText("Extra Salami").click();
-  await page.getByRole("button", { name: /In den Warenkorb/ }).click();
+  // the cart write must be answered before the page is left: a new visitor gets the session
+  // cookie with that answer (newer storefronts give no session for a page view)
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" && /\/api\/cart\/lines|\/checkout\/cart\/line-item/.test(response.url()),
+    ),
+    page.getByRole("button", { name: /In den Warenkorb/ }).click(),
+  ]);
   // storefront 2.x: one-page checkout with the cart next to the form
   await page.goto(`${STOREFRONT}/bestellung/kasse`, { waitUntil: "networkidle" });
   await page.getByText(/Pizza Margherita \+Extra Salami/).first().waitFor();
