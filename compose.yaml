@@ -161,6 +161,9 @@ services:
       NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL: http://localhost:3000
       NUXT_PUBLIC_STORE_URL: http://localhost:3000
       NUXT_SITE_INDEXABLE: "false"
+      # Seals the storefront's session cookie (cart, login; storefront 2.7 and newer need it).
+      # A public demo value: a shop reachable by others sets its own, see .env.example.
+      NUXT_VISITOR_SESSION_PASSWORD: ${STOREFRONT_SESSION_PASSWORD:-quickstart-demo-only-session-password-not-secret}
       # short caches so changes in the Administration show up within a minute
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_PRODUCT: 60
       NUXT_PUBLIC_SHOP_BITE_CACHE_TTL_CROSS_SELLING: 60
