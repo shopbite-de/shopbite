@@ -310,6 +310,22 @@ async function saveGuestDetails(page, email) {
   );
 }
 
+/**
+ * Adds the open dish sheet's configuration to the cart and waits for the answer: a new visitor
+ * gets the session cookie with it (newer storefronts give no session for a page view), so leaving
+ * the page before would lose the cart.
+ */
+async function addToCart(page) {
+  await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" && /\/api\/cart\/lines|\/checkout\/cart\/line-item/.test(response.url()),
+    ),
+    page.getByRole("button", { name: /In den Warenkorb/ }).click(),
+  ]);
+  await page.waitForLoadState("networkidle");
+}
+
 /** Waits until the element's attribute has the value. */
 async function expectAttribute(locator, attribute, value) {
   await locator.page().waitForFunction(
@@ -334,8 +350,7 @@ await pluginCheck("dish from the storefront: server label and removed ingredient
     await page.getByText(DISH).first().click();
     await page.getByRole("button", { name: INGREDIENT, exact: true }).click();
     await page.getByText(EXTRA).click();
-    await page.getByRole("button", { name: /In den Warenkorb/ }).click();
-    await page.waitForLoadState("networkidle");
+    await addToCart(page);
     await page.goto(`${STOREFRONT}/bestellung/kasse`, { waitUntil: "networkidle" });
     await page.getByText(dish.label).first().waitFor();
 
@@ -752,8 +767,7 @@ await leadTimeStorefrontCheck("checkout: wording and earliest time follow the sh
 
     await page.goto(`${STOREFRONT}/Speisekarte/Pizza/`, { waitUntil: "networkidle" });
     await page.getByText(DISH).first().click();
-    await page.getByRole("button", { name: /In den Warenkorb/ }).click();
-    await page.waitForLoadState("networkidle");
+    await addToCart(page);
     await page.goto(`${STOREFRONT}/bestellung/kasse`, { waitUntil: "networkidle" });
 
     const methods = page.getByRole("radiogroup", { name: "Versandarten" });
