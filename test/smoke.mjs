@@ -67,7 +67,7 @@ await step("every menu section lists dishes", async () => {
   for (const section of menu.categories) {
     const response = await fetch(`${STOREFRONT}/api/listing/${hid("category:" + section.key)}`);
     expect(response.ok, `listing of ${section.name}: HTTP ${response.status}`);
-    if (!(await response.json()).elements?.length) empty.push(section.name);
+    if (!((listing) => listing.dishes ?? listing.elements)(await response.json())?.length) empty.push(section.name);
   }
   expect(!empty.length, `no dishes in ${empty.join(", ")}`);
 });
