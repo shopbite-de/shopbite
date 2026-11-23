@@ -18,7 +18,7 @@ The implementer knows what it meant and reads that into the diff; so does the se
 3. **Act** on the verdict:
    - `changes needed`: send the findings to the implementer (its agent, or a new one in the same worktree) to fix. Then **verify** with a new reviewer whose scope is the fix commit only: the findings it claims to fix (stated as requirements, not as the old reviewer's text) and new blockers or regressions; lesser points come back as nits. A full review per round never converges, because every fresh reviewer finds new nits. Two fix rounds at most; after that, bring the remaining findings to the user, or, if the user asked for a finished PR, open it with them listed under known limitations.
    - Ranking: fix blockers and should-fix findings; batch nits, and fix them only when cheap.
-   - `ready`: report to the user with the reviewer's checks alongside the implementer's report.
+   - `ready`: read the last fix commit yourself (deadlines, locks, anything the findings touched), then report to the user with the reviewer's checks alongside the implementer's report.
    
    A finding you think is wrong goes to the user with your reason; do not drop it silently.
 
