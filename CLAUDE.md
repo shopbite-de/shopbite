@@ -41,4 +41,6 @@ docker compose -f compose.yaml -f test/compose.hardening.yaml up -d --no-deps st
 cd test && HARDENING_GEOAPIFY_KEY=hardening-dummy-key npm run hardening
 ```
 
-Test locally built images with `SHOPWARE_IMAGE` / `STOREFRONT_IMAGE` (see `.env.example`, also `ADMIN_PASSWORD`, `SEED_DEMO_MENU`).
+Test locally built images with `SHOPWARE_IMAGE` / `STOREFRONT_IMAGE` (see `.env.example`, also `ADMIN_PASSWORD`, `SEED_DEMO_MENU`). Set them for the build as well (`STOREFRONT_IMAGE=<project>-storefront:local docker compose -p <project> build storefront`): without them Compose tags the build as `ghcr.io/shopbite-de/shopbite-storefront:latest`, the image every other stack on the host runs.
+
+Where Playwright's own Chromium does not start (e.g. NixOS: `browserType.launch: Target page, context or browser has been closed`), run the tests in `mcr.microsoft.com/playwright:v<version from test/package.json>-noble` with `--network host` and the whole repo mounted (`-v "$PWD":/r -w /r/test`); mounting only `test/` fails, the smoke test reads `../setup/menu.json`.
