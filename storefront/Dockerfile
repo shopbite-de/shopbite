@@ -8,7 +8,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.34.9
 
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml .npmrc ./
-# CI pins the exact storefront release it tests (.github/workflows/images.yaml); locally the newest 2.x
+# CI pins the exact storefront release it tests (.github/workflows/images.yaml); locally the newest 3.x
 ARG STOREFRONT_VERSION=
 RUN if [ -n "$STOREFRONT_VERSION" ]; then pnpm add "@shopbite-de/storefront@$STOREFRONT_VERSION"; else pnpm install; fi
 

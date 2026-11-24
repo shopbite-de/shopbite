@@ -32,4 +32,4 @@ http://localhost:3000 then serves your version.
 
 ## Going live
 
-This folder is a regular Nuxt project: copy it into its own repository, point `NUXT_PUBLIC_SHOPWARE_ENDPOINT` and `NUXT_PUBLIC_SHOPWARE_ACCESS_TOKEN` at your Shopware and deploy it with the `Dockerfile`. See the [storefront docs](https://shopbite.de/docs/storefront/first-steps).
+This folder is a regular Nuxt project: copy it into its own repository, point `NUXT_SHOPWARE_ENDPOINT` and `NUXT_SHOPWARE_ACCESS_TOKEN` at your Shopware and deploy it with the `Dockerfile`. See the [storefront docs](https://shopbite.de/docs/storefront/first-steps).

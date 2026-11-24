@@ -154,11 +154,13 @@ services:
     pull_policy: missing
     restart: unless-stopped
     # Shares the network of the shopware container: http://localhost:8000 then points to
-    # Shopware in the browser and during server-side rendering alike.
+    # Shopware on the storefront's server and in the browser (media) alike.
     network_mode: service:shopware
     environment:
-      NUXT_PUBLIC_SHOPWARE_ENDPOINT: http://localhost:8000/store-api
-      NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL: http://localhost:3000
+      # Store API endpoint, read by the storefront's server only (storefront 3.0 and newer;
+      # older images need NUXT_PUBLIC_SHOPWARE_ENDPOINT and NUXT_PUBLIC_SHOPWARE_ACCESS_TOKEN).
+      # The access key comes from /config/storefront.env, written by the setup service.
+      NUXT_SHOPWARE_ENDPOINT: http://localhost:8000/store-api
       NUXT_PUBLIC_STORE_URL: http://localhost:3000
       NUXT_SITE_INDEXABLE: "false"
       # Seals the storefront's session cookie (cart, login; storefront 2.7 and newer need it).

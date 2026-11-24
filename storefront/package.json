@@ -9,7 +9,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@shopbite-de/storefront": "^2.4.0",
+    "@shopbite-de/storefront": "^3.0.0",
     "nuxt": "^4.6.4"
   },
   "packageManager": "pnpm@10.34.9"

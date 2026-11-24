@@ -423,7 +423,7 @@ def main():
     channel = api.search("sales-channel", {"ids": [SALES_CHANNEL_ID]})[0]
 
     config = {
-        "NUXT_PUBLIC_SHOPWARE_ACCESS_TOKEN": channel["accessKey"],
+        "NUXT_SHOPWARE_ACCESS_TOKEN": channel["accessKey"],
         "NUXT_PUBLIC_SITE_COUNTRY_ID": channel["countryId"],
         "NUXT_PUBLIC_SHOP_BITE_MENU_CATEGORY_ID": MENU_ID,
     }
@@ -432,9 +432,8 @@ def main():
         f.write("".join(f"{k}={v}\n" for k, v in config.items()))
     if os.path.isdir(os.path.dirname(DEV_ENV_FILE)):
         dev = {**config,
-               "NUXT_PUBLIC_SHOPWARE_ENDPOINT": "http://localhost:8000/store-api",
-               "NUXT_PUBLIC_STORE_URL": DEV_URL,
-               "NUXT_PUBLIC_SHOPWARE_DEV_STORE_FRONT_URL": DEV_URL}
+               "NUXT_SHOPWARE_ENDPOINT": "http://localhost:8000/store-api",
+               "NUXT_PUBLIC_STORE_URL": DEV_URL}
         with open(DEV_ENV_FILE, "w") as f:
             f.write("# written by the setup service of compose.yaml, used by `pnpm dev`\n")
             f.write("".join(f"{k}={v}\n" for k, v in dev.items()))
